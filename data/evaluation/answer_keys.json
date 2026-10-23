@@ -1,0 +1,17 @@
+{
+  "INC-001-n20_fl-205830": {
+    "expected_cause_label": "motor.jam (n20_fl mechanical gearbox/wheel jam)",
+    "expected_component": "n20_fl",
+    "expected_fault": "jam"
+  },
+  "INC-002-n20_fl-205857": {
+    "expected_cause_label": "motor.jam (n20_fl mechanical gearbox/wheel jam)",
+    "expected_component": "n20_fl",
+    "expected_fault": "jam"
+  },
+  "INC-003-n20_fl-205909": {
+    "expected_cause_label": "motor.burned_out (n20_fl winding insulation failure above 115\u00b0C)",
+    "expected_component": "n20_fl",
+    "expected_fault": "burned_out"
+  }
+}

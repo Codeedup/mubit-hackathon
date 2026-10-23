@@ -470,6 +470,13 @@
             const el = document.getElementById("event-log");
             el.innerHTML = "";
             (msg.events || []).forEach(appendLog);
+          } else if (msg.type === "error") {
+            appendLog({
+              t: currentState ? currentState.t : 0,
+              source: "error",
+              kind: "fault",
+              text: msg.message || "Command error"
+            });
           }
         } catch (e) {
           console.error(e);
@@ -551,11 +558,11 @@
       document.getElementById("metric-v5").innerText = s.power.rail_5v_v.toFixed(2) + " V";
 
       const pwrBadge = document.getElementById("power-badge");
-      if (s.power.rail_5v_v < 4.4) {
+      if (s.power.rail_5v_v < 4.4 || activeFaultsSet.has("power:brownout")) {
         pwrBadge.innerText = "BROWNOUT RISK";
         pwrBadge.className = "badge badge-danger";
-      } else if (s.power.battery_v < 6.8) {
-        pwrBadge.innerText = "LOW BATT";
+      } else if (s.power.battery_v < 7.0 || activeFaultsSet.has("power:battery_aging")) {
+        pwrBadge.innerText = "LOW BATT / AGED";
         pwrBadge.className = "badge badge-warn";
       } else {
         pwrBadge.innerText = "HEALTHY";
@@ -576,9 +583,18 @@
       document.getElementById("metric-servo-curr").innerText = sv.current_a.toFixed(2) + " A";
 
       const servoBadge = document.getElementById("servo-badge");
-      if (sv.blocked) {
+      if (activeFaultsSet.has("servo_arm:signal_loss") || sv.pulse_us === 0) {
+        servoBadge.innerText = sv.attached ? "SIGNAL LOSS" : "DETACHED";
+        servoBadge.className = sv.attached ? "badge badge-danger" : "badge badge-warn";
+      } else if (sv.blocked) {
         servoBadge.innerText = "STALLED";
         servoBadge.className = "badge badge-danger";
+      } else if (activeFaultsSet.has("servo_arm:jitter")) {
+        servoBadge.innerText = "JITTERING";
+        servoBadge.className = "badge badge-warn";
+      } else if (activeFaultsSet.has("servo_arm:calibration_drift")) {
+        servoBadge.innerText = "DRIFTED";
+        servoBadge.className = "badge badge-warn";
       } else if (sv.moving) {
         servoBadge.innerText = "MOVING";
         servoBadge.className = "badge badge-info";
@@ -601,15 +617,16 @@
       const lCount = (data.listeners || []).length;
       document.getElementById("listener-count").innerText = `${lCount} Active`;
       const lBox = document.getElementById("listeners-list");
-      if (lCount === 0) {
-        lBox.innerHTML = `No listener connected.<br>Connect to: <code style="color:var(--accent)">ws://${window.location.host}/ws/telemetry</code>`;
-      } else {
-        lBox.innerHTML = data.listeners.map(l =>
-          `<div style="display:flex; justify-content:space-between; margin-bottom:4px; padding:3px; background:#0d1117; border-radius:3px;">
-            <span>🤖 <b>${l.name}</b> (${l.addr})</span>
-            <span style="color:var(--accent);">${l.commands} cmds</span>
-           </div>`
-        ).join("");
+      const newListenersHtml = lCount === 0
+        ? `No listener connected.<br>Connect to: <code style="color:var(--accent)">ws://${window.location.host}/ws/telemetry</code>`
+        : data.listeners.map(l =>
+            `<div style="display:flex; justify-content:space-between; margin-bottom:4px; padding:3px; background:#0d1117; border-radius:3px;">
+              <span>🤖 <b>${l.name}</b> (${l.addr})</span>
+              <span style="color:var(--accent);">${l.commands} cmds</span>
+             </div>`
+          ).join("");
+      if (lBox.innerHTML !== newListenersHtml) {
+        lBox.innerHTML = newListenersHtml;
       }
 
       // Events
@@ -622,32 +639,81 @@
       }
     }
 
+    const MOTOR_FAULTS = ["jam", "encoder_failure", "overheat", "disconnected"];
+
     function renderMotorsTable(motors) {
       const tbody = document.getElementById("motors-table-body");
-      tbody.innerHTML = motors.map(m => {
+
+      // Only build the DOM rows once so 20 Hz updates don't destroy buttons mid-click
+      if (tbody.children.length !== motors.length) {
+        tbody.innerHTML = motors.map(m => {
+          const faultButtons = MOTOR_FAULTS.map(f =>
+            `<span class="fault-tag" id="fault-${m.id}-${f}" onclick="toggleFault('${m.id}', '${f}')">${f.replace('_', ' ')}</span>`
+          ).join(" ");
+          return `
+            <tr id="row-${m.id}">
+              <td><b>${m.id}</b><br><span style="color:var(--text-muted);font-size:9px;">${m.position}</span></td>
+              <td><span id="m-mode-${m.id}" class="badge badge-info">${m.mode}</span></td>
+              <td id="m-pwm-${m.id}">0.00</td>
+              <td id="m-tgt-${m.id}">0</td>
+              <td id="m-rpm-${m.id}" style="font-weight:bold;">0 / 0</td>
+              <td id="m-curr-${m.id}">0.00 A</td>
+              <td id="m-temp-${m.id}">22.0 °C</td>
+              <td id="m-faults-${m.id}"><span style="color:var(--success)">OK</span></td>
+              <td>${faultButtons}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      motors.forEach(m => {
         const isStall = m.current_a > 0.8 && Math.abs(m.rpm_true) < 15;
         const isBurned = m.faults.includes("burned_out");
         const rpmColor = isBurned ? "var(--danger)" : (isStall ? "var(--warning)" : "var(--text-bright)");
 
-        const faultButtons = ["jam", "encoder_failure", "overheat", "disconnected"].map(f => {
-          const active = activeFaultsSet.has(`${m.id}:${f}`);
-          return `<span class="fault-tag ${active ? 'active' : ''}" onclick="toggleFault('${m.id}', '${f}')">${f.replace('_', ' ')}</span>`;
-        }).join(" ");
+        const modeEl = document.getElementById(`m-mode-${m.id}`);
+        if (modeEl) {
+          modeEl.innerText = m.mode;
+          modeEl.className = `badge ${m.mode === 'pid' ? 'badge-info' : 'badge-warn'}`;
+        }
 
-        return `
-          <tr>
-            <td><b>${m.id}</b><br><span style="color:var(--text-muted);font-size:9px;">${m.position}</span></td>
-            <td><span class="badge ${m.mode==='pid'?'badge-info':'badge-warn'}">${m.mode}</span></td>
-            <td>${m.pwm.toFixed(2)}</td>
-            <td>${m.target_rpm.toFixed(0)}</td>
-            <td style="color:${rpmColor}; font-weight:bold;">${m.rpm.toFixed(0)} / ${m.rpm_true.toFixed(0)}</td>
-            <td>${m.current_a.toFixed(2)} A</td>
-            <td>${m.temp_c.toFixed(1)} °C</td>
-            <td>${m.faults.map(f => `<span class="badge badge-danger">${f}</span>`).join(' ') || '<span style="color:var(--success)">OK</span>'}</td>
-            <td>${faultButtons}</td>
-          </tr>
-        `;
-      }).join("");
+        const pwmEl = document.getElementById(`m-pwm-${m.id}`);
+        if (pwmEl) pwmEl.innerText = m.pwm.toFixed(2);
+
+        const tgtEl = document.getElementById(`m-tgt-${m.id}`);
+        if (tgtEl) tgtEl.innerText = m.target_rpm.toFixed(0);
+
+        const rpmEl = document.getElementById(`m-rpm-${m.id}`);
+        if (rpmEl) {
+          rpmEl.style.color = rpmColor;
+          rpmEl.innerText = `${m.rpm.toFixed(0)} / ${m.rpm_true.toFixed(0)}`;
+        }
+
+        const currEl = document.getElementById(`m-curr-${m.id}`);
+        if (currEl) currEl.innerText = `${m.current_a.toFixed(2)} A`;
+
+        const tempEl = document.getElementById(`m-temp-${m.id}`);
+        if (tempEl) tempEl.innerText = `${m.temp_c.toFixed(1)} °C`;
+
+        const faultsEl = document.getElementById(`m-faults-${m.id}`);
+        if (faultsEl) {
+          const faultsHtml = m.faults.map(f =>
+            `<span class="badge badge-danger" style="cursor:pointer;" title="Click to clear/replace" onclick="toggleFault('${m.id}', '${f}')">${f}</span>`
+          ).join(' ') || '<span style="color:var(--success)">OK</span>';
+          if (faultsEl.innerHTML !== faultsHtml) {
+            faultsEl.innerHTML = faultsHtml;
+          }
+        }
+
+        MOTOR_FAULTS.forEach(f => {
+          const btn = document.getElementById(`fault-${m.id}-${f}`);
+          if (btn) {
+            const active = activeFaultsSet.has(`${m.id}:${f}`);
+            const cls = active ? "fault-tag active" : "fault-tag";
+            if (btn.className !== cls) btn.className = cls;
+          }
+        });
+      });
     }
 
     function appendLog(e) {

@@ -3,7 +3,7 @@ import json
 import websockets
 
 # 1. The simulation address (ws = websocket protocol)
-URL = "ws://localhost:8000/ws/telemetry"
+URL = "ws://localhost:8001/ws/telemetry"
 
 
 async def run():

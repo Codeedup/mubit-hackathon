@@ -1,0 +1,1070 @@
+{
+  "id": "INC-002-n20_fl-205857",
+  "robot_type": "bot-01 (Live Simulator Telemetry)",
+  "time_window": "2026-10-23T20:58:56.678Z → 2026-10-23T20:58:57.813Z (12 frames)",
+  "commanded_action": "n20_fl.set_target_rpm(150) [mode=pid, pwm=1.00]",
+  "readings": [
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 8.052,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 0.229,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.983,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 150.3,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 0.452,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.054,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 84.7,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 90.19,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.678Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.066,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 8.059,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 0.226,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.978,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 150.5,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 0.452,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.054,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 84.3,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 89.55,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.779Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.074,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 8.024,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 0.576,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.974,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 48.3,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 0.635,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.408,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 84.3,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 89.7,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.884Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.067,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 8.025,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 0.762,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.988,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 9.4,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 0.77,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.596,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 84.1,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 90.05,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:56.985Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.079,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.985,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 0.945,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.985,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 1.9,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 0.87,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.762,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 84.2,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 89.55,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.086Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.071,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.968,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.105,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.98,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.3,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 0.971,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.94,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 84.5,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 90.16,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.190Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.064,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.965,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.179,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.988,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.1,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 1.001,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 85.1,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 89.64,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.291Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.068,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.943,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.177,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.984,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.996,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 85.3,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 89.88,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.396Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.068,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.98,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.177,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.978,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 1.002,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 85.8,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 90.09,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.501Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.07,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.954,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.174,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.988,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 0.999,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 86.3,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 90.19,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.604Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.068,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.955,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.168,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 5.003,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 1.003,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 86.2,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 89.9,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.708Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.066,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "power",
+      "metric": "battery_v",
+      "value": 7.941,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "power",
+      "metric": "battery_current_a",
+      "value": 1.192,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "power",
+      "metric": "rail_5v_v",
+      "value": 4.976,
+      "unit": "V",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "n20_fl",
+      "metric": "rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "n20_fl",
+      "metric": "target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "n20_fl",
+      "metric": "pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "n20_fl",
+      "metric": "current_a",
+      "value": 1.003,
+      "unit": "A",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "n20_fl",
+      "metric": "temp_c",
+      "value": 86.7,
+      "unit": "degC",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "servo_arm",
+      "metric": "actual_deg",
+      "value": 90.32,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "servo_arm",
+      "metric": "target_deg",
+      "value": 90.0,
+      "unit": "deg",
+      "origin": "bot-01"
+    },
+    {
+      "ts": "2026-10-23T20:58:57.813Z",
+      "sensor": "servo_arm",
+      "metric": "current_a",
+      "value": 0.067,
+      "unit": "A",
+      "origin": "bot-01"
+    }
+  ],
+  "fault_codes": [
+    "ERR_MTR_N20_FL_STALL",
+    "WARN_HIGH_CURRENT_N20_FL"
+  ],
+  "technician_note": "Live telemetry anomaly on n20_fl: wheel stalled at 0.0 RPM while commanded to 150 RPM (PWM=1.00), drawing 1.00A stall current and heating to 86.7°C.",
+  "source_type": "measured"
+}
