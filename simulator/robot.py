@@ -125,9 +125,10 @@ class Battery:
         self.soc = clamp(
             self.soc - current * dt / 3600.0 / (self.capacity_mah / 1000.0) * self.drain_mult, 0.0, 1.0
         )
-        r = self.r_int * (5.0 if aging else 1.0)
+        r = self.r_int * (12.0 if aging else 1.0)
+        aged_drop = 0.65 if aging else 0.0
         self.temp += ((current**2) * r - (self.temp - ambient) / 6.0) / 40.0 * dt
-        return max(0.0, self.ocv() - current * r)
+        return max(0.0, self.ocv() - aged_drop - current * r)
 
 
 # --------------------------------------------------------------------------- #
@@ -366,9 +367,11 @@ class Servo:
             if self.blocked:
                 current = self.STALL_A
             if "jitter" in self.faults:
-                self.actual += random.gauss(0, 1.6)
-                current += abs(random.gauss(0, 0.07))
-                speed = max(speed, 10.0)
+                jitter_deg = random.gauss(0, 3.2)
+                self.actual += jitter_deg
+                self.pulse_us = clamp(int(self.pulse_us + jitter_deg * 11), 500, 2500)
+                current += 0.12 + abs(random.gauss(0, 0.12))
+                speed = max(speed, 25.0)
         else:
             self.commanded = None
             self.pulse_us = 0
@@ -507,7 +510,7 @@ class Robot:
 
         # Power tree: battery -> (H-bridges) + (5 V buck -> MCU, sensors, servo)
         i5 = self.servo.current + (0.15 if mcu_on else 0.03)
-        r_reg = 1.8 if "brownout" in self.power_faults else 0.08
+        r_reg = 3.6 if "brownout" in self.power_faults else 0.08
         rail_nominal = min(5.0, max(0.0, self.battery_v - 0.5))
         self.rail_v = max(0.0, rail_nominal - i5 * r_reg)
         self.rail_current = i5
@@ -518,7 +521,7 @@ class Robot:
         # Brownout detector
         if mcu_on and self.rail_v < BROWNOUT_V:
             self.brownout_timer += dt
-            if self.brownout_timer > 0.02:
+            if self.brownout_timer > 1.5:
                 self._mcu_reset("brownout")
         else:
             self.brownout_timer = 0.0
@@ -647,7 +650,7 @@ class Robot:
             "true_values": {
                 "motor_rpm": {m.id: round(m.rpm, 1) for m in self.motors},
                 "servo_actual_deg": round(self.servo.actual, 2),
-                "battery_internal_resistance_ohm": round(self.battery.r_int * (5 if "battery_aging" in self.power_faults else 1), 3),
+                "battery_internal_resistance_ohm": round(self.battery.r_int * (12 if "battery_aging" in self.power_faults else 1), 3),
                 "pose": {"x_m": round(self.pose["x"], 3), "y_m": round(self.pose["y"], 3),
                          "heading_deg": round(math.degrees(self.pose["h"]) % 360, 1)},
             },
@@ -714,17 +717,44 @@ class Robot:
                     raise ValueError(f"fault '{fault}' not injectable on {comp}")
                 store[fault] = self.sim_time
                 extra = ""
-                if comp in self.motor_by_id and fault == "jam":
+                if comp in self.motor_by_id:
                     m = self.motor_by_id[comp]
-                    m.jam_dir, m.unjam_timer = sign(m.pwm), 0.0
-                if comp == self.servo.id and fault == "calibration_drift":
-                    v = msg.get("value")
-                    self.servo.drift_offset = float(v) if v else random.choice([-1, 1]) * random.uniform(8, 15)
-                    extra = f" (offset {self.servo.drift_offset:+.1f} deg)"
+                    # If the motor is currently idle, engage drive so the fault's physical effect is immediately observable
+                    if m.mode == "pid" and abs(m.target_rpm) < 1.0:
+                        m.target_rpm = 150.0
+                    elif m.mode == "manual" and abs(m.manual_pwm) < 0.05:
+                        m.manual_pwm = 0.5
+                    if fault == "jam":
+                        m.jam_dir = sign(m.pwm) or sign(m.target_rpm) or 1
+                        m.unjam_timer = 0.0
+                if comp == self.servo.id:
+                    if fault == "jam":
+                        # Ensure the servo is actively blocked away from its target so it stalls (~0.75A) immediately
+                        cmd_deg = clamp(self.servo.target + self.servo.trim, 0.0, 180.0)
+                        if abs(cmd_deg - self.servo.actual) < 10.0:
+                            offset = -35.0 if cmd_deg >= 60.0 else 35.0
+                            self.servo.actual = clamp(cmd_deg + offset, 0.0, 180.0)
+                        extra = f" (blocked at {self.servo.actual:.1f} deg vs target {self.servo.target:.1f} deg)"
+                    elif fault == "calibration_drift":
+                        v = msg.get("value")
+                        self.servo.drift_offset = float(v) if v else random.choice([-1, 1]) * random.uniform(8, 15)
+                        extra = f" (offset {self.servo.drift_offset:+.1f} deg)"
+                    elif fault == "signal_loss":
+                        if self.servo.actual < 20.0:
+                            self.servo.actual = 90.0
+                            self.servo.target = 90.0
+                if comp == "power" and fault == "battery_aging":
+                    # Ensure motors are drawing load if all are idle so voltage sag is immediately observable
+                    if all(abs(m.target_rpm) < 1.0 and abs(m.manual_pwm) < 0.05 for m in self.motors):
+                        for m in self.motors:
+                            if m.mode == "pid":
+                                m.target_rpm = 150.0
                 self.log("sim", "fault", f"Injected '{fault}' on {comp}{extra}")
             elif action == "clear_fault":
                 store, _ = self._fault_store(comp)
                 if store.pop(fault, None) is not None:
+                    if comp == self.servo.id and fault == "calibration_drift":
+                        self.servo.drift_offset = 0.0
                     if fault == "burned_out":
                         m = self.motor_by_id[comp]
                         m.temp = self.env["ambient_c"]
@@ -735,6 +765,7 @@ class Robot:
                 for m in self.motors:
                     m.faults.clear()
                 self.servo.faults.clear()
+                self.servo.drift_offset = 0.0
                 self.power_faults.clear()
                 self.log("sim", "fault", "All faults cleared")
             elif action == "set":

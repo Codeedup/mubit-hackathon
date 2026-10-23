@@ -152,7 +152,16 @@ async def api_packet() -> JSONResponse:
 
 @app.post("/api/command")
 async def api_command(msg: dict[str, Any]) -> JSONResponse:
+    if msg.get("kind") == "sim" or msg.get("action") in ("inject_fault", "clear_fault", "clear_all_faults", "set", "pause", "reset"):
+        ok, m = hub.robot.apply_sim(msg)
+        return JSONResponse({"type": "ack", "id": msg.get("id"), "ok": ok, "message": m})
     return JSONResponse(hub.handle_command(msg, "http"))
+
+
+@app.post("/api/sim")
+async def api_sim(msg: dict[str, Any]) -> JSONResponse:
+    ok, m = hub.robot.apply_sim(msg)
+    return JSONResponse({"type": "ack", "id": msg.get("id"), "ok": ok, "message": m})
 
 
 @app.websocket("/ws/telemetry")
@@ -217,6 +226,8 @@ async def ws_ui(ws: WebSocket) -> None:
                 res = {"type": "ack", "ok": False, "message": "unknown kind"}
             if not res["ok"]:
                 await ws.send_text(json.dumps({"type": "error", "message": res["message"]}))
+            else:
+                await hub._send_ui()
     except (WebSocketDisconnect, json.JSONDecodeError):
         pass
     finally:
