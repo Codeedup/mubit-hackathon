@@ -1,6 +1,6 @@
 # Robo Medic
 
-Blank, local-first starting point for the Mubit Night Shift hackathon team. The browser shows three technician views, the API exposes the agreed route names, and SQLite starts with empty tables. No incidents, model responses, answer keys, provider calls, or credentials are included.
+local-first starting point for the Mubit Night Shift hackathon team. The browser shows three technician views, the API exposes the agreed route names, and SQLite starts with empty tables. No incidents, model responses, answer keys, provider calls, or credentials are included.
 
 ## Run locally
 
