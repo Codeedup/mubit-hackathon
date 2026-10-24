@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-005",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T10:40:00Z to 2026-10-24T10:40:02Z",
+  "commanded_action": "Rotate right for 2 seconds",
+  "readings": [
+    {
+      "sensor": "driver_output_state",
+      "value": "inactive",
+      "unit": "state",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:40:00Z"
+    },
+    {
+      "sensor": "driver_supply",
+      "value": 7.4,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:40:00Z"
+    }
+  ],
+  "fault_codes": [
+    "DRIVER_OUTPUT_FAULT"
+  ],
+  "technician_note": "The motor driver output stayed inactive despite a turn command.",
+  "source_type": "synthetic"
+}

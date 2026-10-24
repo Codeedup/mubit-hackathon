@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "id": "DEV-003",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T09:20:00Z to 2026-10-24T09:20:02Z",
+  "commanded_action": "Rotate right for 2 seconds",
+  "readings": [
+    {
+      "sensor": "observed_wheel_motion",
+      "value": "rotating",
+      "unit": "state",
+      "origin": "synthetic",
+      "time": "2026-10-24T09:20:00Z"
+    },
+    {
+      "sensor": "reported_encoder_ticks",
+      "value": 0,
+      "unit": "count",
+      "origin": "synthetic",
+      "time": "2026-10-24T09:20:00Z"
+    }
+  ],
+  "fault_codes": [
+    "ENCODER_SIGNAL_MISSING"
+  ],
+  "technician_note": "Wheel motion was simulated while the encoder count stayed at zero.",
+  "source_type": "synthetic"
+}

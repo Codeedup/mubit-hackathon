@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-007",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T11:00:00Z to 2026-10-24T11:00:03Z",
+  "commanded_action": "Drive forward for 3 seconds",
+  "readings": [
+    {
+      "sensor": "observed_wheel_motion",
+      "value": "moving",
+      "unit": "state",
+      "origin": "synthetic",
+      "time": "2026-10-24T11:00:00Z"
+    },
+    {
+      "sensor": "reported_encoder_ticks",
+      "value": 1,
+      "unit": "count",
+      "origin": "synthetic",
+      "time": "2026-10-24T11:00:00Z"
+    }
+  ],
+  "fault_codes": [
+    "ENCODER_INTERMITTENT"
+  ],
+  "technician_note": "The wheel moved through several turns while ticks barely changed.",
+  "source_type": "synthetic"
+}

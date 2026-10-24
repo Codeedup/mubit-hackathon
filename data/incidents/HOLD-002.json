@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-002",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T10:10:00Z to 2026-10-24T10:10:04Z",
+  "commanded_action": "Drive forward for 4 seconds",
+  "readings": [
+    {
+      "sensor": "driver_supply",
+      "value": 3.9,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:10:00Z"
+    },
+    {
+      "sensor": "left_wheel_speed",
+      "value": 0,
+      "unit": "rpm",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:10:00Z"
+    }
+  ],
+  "fault_codes": [
+    "POWER_LOW"
+  ],
+  "technician_note": "No movement occurred after the drive command.",
+  "source_type": "synthetic"
+}
