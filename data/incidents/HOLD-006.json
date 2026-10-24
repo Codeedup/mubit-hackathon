@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-006",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T10:50:00Z to 2026-10-24T10:50:03Z",
+  "commanded_action": "Drive forward for 3 seconds",
+  "readings": [
+    {
+      "sensor": "right_wheel_speed",
+      "value": 0,
+      "unit": "rpm",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:50:00Z"
+    },
+    {
+      "sensor": "right_motor_current",
+      "value": 1.9,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:50:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "Right wheel stopped abruptly in the simulated run.",
+  "source_type": "synthetic"
+}

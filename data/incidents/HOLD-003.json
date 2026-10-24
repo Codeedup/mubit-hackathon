@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-003",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T10:20:00Z to 2026-10-24T10:20:02Z",
+  "commanded_action": "Rotate left for 2 seconds",
+  "readings": [
+    {
+      "sensor": "observed_wheel_motion",
+      "value": "rotating",
+      "unit": "state",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:20:00Z"
+    },
+    {
+      "sensor": "reported_encoder_ticks",
+      "value": 0,
+      "unit": "count",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:20:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "A simulated visual observation shows motion despite zero reported ticks.",
+  "source_type": "synthetic"
+}

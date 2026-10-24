@@ -11,6 +11,14 @@
 
 ## Testing efficiency
 
+- The project and hackathon sponsor favor a lean test suite. Add a test only
+  when it protects a real failure mode, safety rule, data integrity boundary,
+  or integration contract. Keep the smallest representative cases that do so.
+- Do not add tests that merely repeat framework validation, pin fixture counts,
+  duplicate another test, or check incidental implementation details. Remove
+  redundant or obsolete tests as behavior changes.
+- Avoid new test dependencies for low-risk changes. Prefer a targeted manual
+  check when a one-off behavior does not justify permanent test code.
 - During development, run tests for the affected package or component first.
 - Do not automatically run the complete ROS 2 test suite after every edit.
 - Run broader regression tests when changes cross package boundaries, affect shared interfaces, or introduce integration risks.

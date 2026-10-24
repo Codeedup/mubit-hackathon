@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mubit Robot Telemetry Simulator</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-bright: #f0f6fc;
+      --accent: #58a6ff;
+      --accent-hover: #1f6feb;
+      --danger: #f85149;
+      --warning: #d29922;
+      --success: #3fb950;
+      --purple: #bc8cff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+      font-size: 13px;
+      padding: 12px;
+    }
+
+    /* Layout */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .badge-ok { background: rgba(63, 185, 80, 0.2); color: var(--success); border: 1px solid var(--success); }
+    .badge-warn { background: rgba(210, 153, 34, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-danger { background: rgba(248, 81, 73, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-info { background: rgba(88, 166, 255, 0.2); color: var(--accent); border: 1px solid var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr 340px;
+      gap: 12px;
+    }
+    @media (max-width: 1280px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+    }
+
+    /* Metric stat box */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stat-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+    .stat-val { font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 2px; }
+
+    /* Controls */
+    .btn {
+      background: #21262d;
+      color: var(--text-bright);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: #30363d; border-color: #8b949e; }
+    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-danger { background: rgba(248, 81, 73, 0.2); color: var(--danger); border-color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-warn { background: rgba(210, 153, 34, 0.2); color: var(--warning); border-color: var(--warning); }
+    .btn-warn:hover { background: var(--warning); color: #000; }
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .control-row label { font-size: 12px; color: var(--text); }
+    .control-row input[type="range"] {
+      width: 140px;
+      accent-color: var(--accent);
+    }
+    .control-row .slider-val {
+      font-family: monospace;
+      width: 44px;
+      text-align: right;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* Motors table */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    table.data-table th, table.data-table td {
+      padding: 4px 6px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    table.data-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10px; }
+
+    /* Fault injection buttons */
+    .fault-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      margin: 2px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #21262d;
+    }
+    .fault-tag.active {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+      font-weight: bold;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.9; }
+      50% { opacity: 0.5; }
+      100% { opacity: 0.9; }
+    }
+
+    /* Logs & Terminal */
+    .log-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px;
+      height: 220px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+    }
+    .log-line { margin-bottom: 2px; word-break: break-all; }
+    .log-t { color: var(--text-muted); }
+    .log-src { color: var(--purple); font-weight: bold; }
+    .log-fault { color: var(--danger); }
+    .log-command { color: var(--accent); }
+    .log-warning { color: var(--warning); }
+    .log-system { color: var(--success); }
+
+    .json-preview {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      height: 260px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 10.5px;
+      color: #79c0ff;
+      white-space: pre-wrap;
+    }
+
+    /* Servo Canvas Visualizer */
+    .visualizer-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+    canvas { background: transparent; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h2 style="font-size: 16px; color: var(--text-bright); display: flex; align-items: center; gap: 8px;">
+        <span style="color: var(--accent)">⚡</span> Mubit Robot Sim
+      </h2>
+      <span id="badge-status" class="badge badge-ok">ONLINE</span>
+      <span id="badge-estop" class="badge badge-danger" style="display: none;">E-STOP LATCHED</span>
+      <span style="font-size: 12px; color: var(--text-muted);">Sim Time: <b id="val-sim-time" style="color: var(--text-bright);">0.0s</b> | Boot ID: <b id="val-boot-id">1</b></span>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="btn btn-warn" onclick="togglePause()" id="btn-pause">Pause</button>
+      <button class="btn btn-danger" onclick="triggerEstop()" id="btn-estop">E-STOP</button>
+      <button class="btn" onclick="sendCmd('robot', 'resume')">Resume</button>
+      <button class="btn" onclick="sendSim('reset')">Reset Sim</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: Hardware Metrics & Diagnostics -->
+    <div>
+      <!-- Battery & Power -->
+      <div class="card">
+        <div class="card-title">
+          <span>🔋 Power Rail & 2S Battery</span>
+          <span id="power-badge" class="badge badge-ok">NORMAL</span>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-label">V-Batt</div>
+            <div class="stat-val" id="metric-vbatt">-- V</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Batt Current</div>
+            <div class="stat-val" id="metric-ibatt">-- A</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">SoC</div>
+            <div class="stat-val" id="metric-soc">-- %</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">5V Rail</div>
+            <div class="stat-val" id="metric-v5">-- V</div>
+          </div>
+        </div>
+        <div style="margin-top: 6px;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Inject Power Fault:</div>
+          <span class="fault-tag" id="fault-power-battery_aging" onclick="toggleFault('power', 'battery_aging')">battery_aging</span>
+          <span class="fault-tag" id="fault-power-brownout" onclick="toggleFault('power', 'brownout')">brownout</span>
+        </div>
+      </div>
+
+      <!-- Servo Subsystem -->
+      <div class="card">
+        <div class="card-title">
+          <span>🦾 MG90S Feedback Servo</span>
+          <span id="servo-badge" class="badge badge-ok">LOCKED</span>
+        </div>
+        <div class="visualizer-box">
+          <canvas id="servoCanvas" width="220" height="110"></canvas>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-label">Target Angle</div>
+            <div class="stat-val" id="metric-servo-tgt">90°</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Actual Angle</div>
+            <div class="stat-val" id="metric-servo-act">--°</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Pulse (µs)</div>
+            <div class="stat-val" id="metric-servo-pulse">1500</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Current</div>
+            <div class="stat-val" id="metric-servo-curr">-- A</div>
+          </div>
+        </div>
+
+        <!-- Target slider -->
+        <div class="control-row">
+          <label>Target Angle:</label>
+          <input type="range" min="0" max="180" value="90" id="slider-servo-tgt" oninput="onServoTargetSlider(this.value)">
+          <span class="slider-val" id="slider-servo-tgt-val">90°</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn" onclick="sendCmd('servo_arm', 'set_target', 0)">0°</button>
+          <button class="btn" onclick="sendCmd('servo_arm', 'set_target', 90)">90°</button>
+          <button class="btn" onclick="sendCmd('servo_arm', 'set_target', 180)">180°</button>
+          <button class="btn" onclick="sendCmd('servo_arm', 'detach')">Detach</button>
+          <button class="btn" onclick="sendCmd('servo_arm', 'reattach')">Reattach</button>
+        </div>
+        <div style="margin-top: 8px;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Inject Servo Fault:</div>
+          <span class="fault-tag" id="fault-servo_arm-jam" onclick="toggleFault('servo_arm', 'jam')">jam</span>
+          <span class="fault-tag" id="fault-servo_arm-jitter" onclick="toggleFault('servo_arm', 'jitter')">jitter</span>
+          <span class="fault-tag" id="fault-servo_arm-calibration_drift" onclick="toggleFault('servo_arm', 'calibration_drift')">drift</span>
+          <span class="fault-tag" id="fault-servo_arm-signal_loss" onclick="toggleFault('servo_arm', 'signal_loss')">signal_loss</span>
+        </div>
+      </div>
+
+      <!-- Connected Listeners -->
+      <div class="card">
+        <div class="card-title">
+          <span>🎧 Listeners & Telemetry Sockets</span>
+          <span id="listener-count" class="badge badge-info">0 Active</span>
+        </div>
+        <div id="listeners-list" style="font-size: 11px; color: var(--text-muted); min-height: 40px;">
+          No listener connected. Connect to: <br><code style="color:var(--accent)">ws://localhost:8001/ws/telemetry</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDDLE: 4x N20 Motors & Robot Drive -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span>⚙️ 4x N20 Gear Motors (6V, 1:100, Quadrature Hall)</span>
+          <div>
+            <button class="btn btn-warn" style="font-size:10px; padding:2px 6px;" onclick="sendSim('clear_all_faults')">Clear All Faults</button>
+          </div>
+        </div>
+
+        <!-- Master Speed Slider -->
+        <div class="control-row" style="background: #0d1117; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border);">
+          <label><b>All Motors Speed:</b></label>
+          <input type="range" min="-300" max="300" value="0" id="slider-all-rpm" oninput="onAllRpmSlider(this.value)">
+          <span class="slider-val" id="slider-all-rpm-val">0 RPM</span>
+          <button class="btn" style="padding:2px 6px;" onclick="sendCmd('all_motors', 'stop')">STOP</button>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 10px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Motor</th>
+                <th>Mode</th>
+                <th>PWM</th>
+                <th>Target</th>
+                <th>RPM (Enc/Real)</th>
+                <th>Current</th>
+                <th>Temp</th>
+                <th>Faults</th>
+                <th>Inject Fault</th>
+              </tr>
+            </thead>
+            <tbody id="motors-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Event Stream Log -->
+      <div class="card">
+        <div class="card-title">
+          <span>📋 System & AI Repair Log</span>
+          <button class="btn" style="font-size: 10px; padding: 1px 6px;" onclick="document.getElementById('event-log').innerHTML=''">Clear</button>
+        </div>
+        <div class="log-box" id="event-log"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Environment, Sliders & Live Packet Viewer -->
+    <div>
+      <!-- Live Tuners -->
+      <div class="card">
+        <div class="card-title">
+          <span>🎛️ Simulation Parameters</span>
+        </div>
+        <div class="control-row">
+          <label>Telemetry Rate:</label>
+          <input type="range" min="1" max="50" value="10" oninput="setSimParam('comms.rate_hz', this.value, 'lbl-rate', ' Hz')">
+          <span class="slider-val" id="lbl-rate">10 Hz</span>
+        </div>
+        <div class="control-row">
+          <label>Packet Loss (%):</label>
+          <input type="range" min="0" max="50" value="0" oninput="setSimParam('comms.packet_loss_pct', this.value, 'lbl-loss', '%')">
+          <span class="slider-val" id="lbl-loss">0%</span>
+        </div>
+        <div class="control-row">
+          <label>Sensor Noise:</label>
+          <input type="range" min="0" max="3" step="0.1" value="1.0" oninput="setSimParam('comms.noise', this.value, 'lbl-noise', 'x')">
+          <span class="slider-val" id="lbl-noise">1.0x</span>
+        </div>
+        <div class="control-row">
+          <label>Ground Incline (°):</label>
+          <input type="range" min="0" max="30" value="0" oninput="setSimParam('env.incline_deg', this.value, 'lbl-inc', '°')">
+          <span class="slider-val" id="lbl-inc">0°</span>
+        </div>
+        <div class="control-row">
+          <label>Battery Drain Mult:</label>
+          <input type="range" min="1" max="100" value="1" oninput="setSimParam('battery.drain_mult', this.value, 'lbl-drain', 'x')">
+          <span class="slider-val" id="lbl-drain">1x</span>
+        </div>
+        <div class="control-row">
+          <label>Include _ground_truth:</label>
+          <input type="checkbox" id="chk-ground-truth" onchange="setSimParam('comms.ground_truth', this.checked)">
+        </div>
+      </div>
+
+      <!-- Live Packet Inspector -->
+      <div class="card">
+        <div class="card-title">
+          <span>📦 Latest Telemetry Packet</span>
+          <span id="packet-seq" style="font-family: monospace; font-size: 11px; color: var(--accent);">seq #0</span>
+        </div>
+        <div class="json-preview" id="json-viewer">Waiting for packets...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ws = null;
+    let currentState = null;
+    let activeFaultsSet = new Set();
+
+    function connectWS() {
+      const loc = window.location;
+      const wsUri = (loc.protocol === "https:" ? "wss:" : "ws:") + "//" + loc.host + "/ws/ui";
+      ws = new WebSocket(wsUri);
+
+      ws.onopen = () => {
+        document.getElementById("badge-status").innerText = "ONLINE";
+        document.getElementById("badge-status").className = "badge badge-ok";
+      };
+
+      ws.onclose = () => {
+        document.getElementById("badge-status").innerText = "RECONNECTING";
+        document.getElementById("badge-status").className = "badge badge-warn";
+        setTimeout(connectWS, 1000);
+      };
+
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.type === "state") {
+            updateDashboard(msg);
+          } else if (msg.type === "events_backlog") {
+            const el = document.getElementById("event-log");
+            el.innerHTML = "";
+            (msg.events || []).forEach(appendLog);
+          } else if (msg.type === "error") {
+            appendLog({
+              t: currentState ? currentState.t : 0,
+              source: "error",
+              kind: "fault",
+              text: msg.message || "Command error"
+            });
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+    }
+
+    function sendSim(action, extra = {}) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ kind: "sim", action: action, ...extra }));
+    }
+
+    function sendCmd(target, action, value = null, reason = null) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({
+        kind: "command",
+        type: "command",
+        target: target,
+        action: action,
+        value: value,
+        reason: reason
+      }));
+    }
+
+    function togglePause() {
+      if (!currentState) return;
+      sendSim(currentState.running ? "pause" : "resume");
+    }
+
+    function triggerEstop() {
+      sendCmd("robot", "estop", null, "Dashboard E-STOP");
+    }
+
+    function toggleFault(component, fault) {
+      const key = `${component}:${fault}`;
+      const has = activeFaultsSet.has(key);
+      if (has) {
+        sendSim("clear_fault", { component: component, fault: fault });
+      } else {
+        sendSim("inject_fault", { component: component, fault: fault });
+      }
+    }
+
+    function setSimParam(key, val, labelId = null, suffix = "") {
+      if (labelId) {
+        document.getElementById(labelId).innerText = val + suffix;
+      }
+      sendSim("set", { key: key, value: val });
+    }
+
+    function onServoTargetSlider(val) {
+      document.getElementById("slider-servo-tgt-val").innerText = val + "°";
+      sendCmd("servo_arm", "set_target", parseFloat(val));
+    }
+
+    function onAllRpmSlider(val) {
+      document.getElementById("slider-all-rpm-val").innerText = val + " RPM";
+      sendCmd("all_motors", "set_target_rpm", parseFloat(val));
+    }
+
+    function updateDashboard(data) {
+      const s = data.state;
+      currentState = s;
+
+      // Header
+      document.getElementById("val-sim-time").innerText = s.t.toFixed(1) + "s";
+      document.getElementById("val-boot-id").innerText = s.boot_id;
+      document.getElementById("btn-pause").innerText = s.running ? "Pause" : "Resume";
+      document.getElementById("badge-estop").style.display = s.estop ? "inline-block" : "none";
+
+      // Active faults set
+      activeFaultsSet.clear();
+      (s.active_faults || []).forEach(f => activeFaultsSet.add(`${f.component}:${f.fault}`));
+
+      // Power
+      document.getElementById("metric-vbatt").innerText = s.power.battery_v.toFixed(2) + " V";
+      document.getElementById("metric-ibatt").innerText = s.power.battery_current_a.toFixed(2) + " A";
+      document.getElementById("metric-soc").innerText = s.power.soc_pct.toFixed(0) + " %";
+      document.getElementById("metric-v5").innerText = s.power.rail_5v_v.toFixed(2) + " V";
+
+      const pwrBadge = document.getElementById("power-badge");
+      if (s.power.rail_5v_v < 4.4 || activeFaultsSet.has("power:brownout")) {
+        pwrBadge.innerText = "BROWNOUT RISK";
+        pwrBadge.className = "badge badge-danger";
+      } else if (s.power.battery_v < 7.0 || activeFaultsSet.has("power:battery_aging")) {
+        pwrBadge.innerText = "LOW BATT / AGED";
+        pwrBadge.className = "badge badge-warn";
+      } else {
+        pwrBadge.innerText = "HEALTHY";
+        pwrBadge.className = "badge badge-ok";
+      }
+
+      // Update Power Fault Tags
+      ["battery_aging", "brownout"].forEach(f => {
+        const tag = document.getElementById(`fault-power-${f}`);
+        if (tag) tag.className = activeFaultsSet.has(`power:${f}`) ? "fault-tag active" : "fault-tag";
+      });
+
+      // Servo
+      const sv = s.servo;
+      document.getElementById("metric-servo-tgt").innerText = sv.target_deg.toFixed(0) + "°";
+      document.getElementById("metric-servo-act").innerText = sv.actual_deg.toFixed(1) + "°";
+      document.getElementById("metric-servo-pulse").innerText = sv.pulse_us;
+      document.getElementById("metric-servo-curr").innerText = sv.current_a.toFixed(2) + " A";
+
+      const servoBadge = document.getElementById("servo-badge");
+      if (activeFaultsSet.has("servo_arm:signal_loss") || sv.pulse_us === 0) {
+        servoBadge.innerText = sv.attached ? "SIGNAL LOSS" : "DETACHED";
+        servoBadge.className = sv.attached ? "badge badge-danger" : "badge badge-warn";
+      } else if (sv.blocked) {
+        servoBadge.innerText = "STALLED";
+        servoBadge.className = "badge badge-danger";
+      } else if (activeFaultsSet.has("servo_arm:jitter")) {
+        servoBadge.innerText = "JITTERING";
+        servoBadge.className = "badge badge-warn";
+      } else if (activeFaultsSet.has("servo_arm:calibration_drift")) {
+        servoBadge.innerText = "DRIFTED";
+        servoBadge.className = "badge badge-warn";
+      } else if (sv.moving) {
+        servoBadge.innerText = "MOVING";
+        servoBadge.className = "badge badge-info";
+      } else {
+        servoBadge.innerText = "HOLD";
+        servoBadge.className = "badge badge-ok";
+      }
+
+      ["jam", "jitter", "calibration_drift", "signal_loss"].forEach(f => {
+        const tag = document.getElementById(`fault-servo_arm-${f}`);
+        if (tag) tag.className = activeFaultsSet.has(`servo_arm:${f}`) ? "fault-tag active" : "fault-tag";
+      });
+
+      drawServo(sv.target_deg, sv.actual_deg, sv.moving, sv.blocked);
+
+      // Motors
+      renderMotorsTable(s.motors);
+
+      // Listeners
+      const lCount = (data.listeners || []).length;
+      document.getElementById("listener-count").innerText = `${lCount} Active`;
+      const lBox = document.getElementById("listeners-list");
+      const newListenersHtml = lCount === 0
+        ? `No listener connected.<br>Connect to: <code style="color:var(--accent)">ws://${window.location.host}/ws/telemetry</code>`
+        : data.listeners.map(l =>
+            `<div style="display:flex; justify-content:space-between; margin-bottom:4px; padding:3px; background:#0d1117; border-radius:3px;">
+              <span>🤖 <b>${l.name}</b> (${l.addr})</span>
+              <span style="color:var(--accent);">${l.commands} cmds</span>
+             </div>`
+          ).join("");
+      if (lBox.innerHTML !== newListenersHtml) {
+        lBox.innerHTML = newListenersHtml;
+      }
+
+      // Events
+      (data.events || []).forEach(appendLog);
+
+      // Packet preview
+      if (data.packet) {
+        document.getElementById("packet-seq").innerText = `seq #${data.packet.seq || 0}`;
+        document.getElementById("json-viewer").innerText = JSON.stringify(data.packet, null, 2);
+      }
+    }
+
+    const MOTOR_FAULTS = ["jam", "encoder_failure", "overheat", "disconnected"];
+
+    function renderMotorsTable(motors) {
+      const tbody = document.getElementById("motors-table-body");
+
+      // Only build the DOM rows once so 20 Hz updates don't destroy buttons mid-click
+      if (tbody.children.length !== motors.length) {
+        tbody.innerHTML = motors.map(m => {
+          const faultButtons = MOTOR_FAULTS.map(f =>
+            `<span class="fault-tag" id="fault-${m.id}-${f}" onclick="toggleFault('${m.id}', '${f}')">${f.replace('_', ' ')}</span>`
+          ).join(" ");
+          return `
+            <tr id="row-${m.id}">
+              <td><b>${m.id}</b><br><span style="color:var(--text-muted);font-size:9px;">${m.position}</span></td>
+              <td><span id="m-mode-${m.id}" class="badge badge-info">${m.mode}</span></td>
+              <td id="m-pwm-${m.id}">0.00</td>
+              <td id="m-tgt-${m.id}">0</td>
+              <td id="m-rpm-${m.id}" style="font-weight:bold;">0 / 0</td>
+              <td id="m-curr-${m.id}">0.00 A</td>
+              <td id="m-temp-${m.id}">22.0 °C</td>
+              <td id="m-faults-${m.id}"><span style="color:var(--success)">OK</span></td>
+              <td>${faultButtons}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      motors.forEach(m => {
+        const isStall = m.current_a > 0.8 && Math.abs(m.rpm_true) < 15;
+        const isBurned = m.faults.includes("burned_out");
+        const rpmColor = isBurned ? "var(--danger)" : (isStall ? "var(--warning)" : "var(--text-bright)");
+
+        const modeEl = document.getElementById(`m-mode-${m.id}`);
+        if (modeEl) {
+          modeEl.innerText = m.mode;
+          modeEl.className = `badge ${m.mode === 'pid' ? 'badge-info' : 'badge-warn'}`;
+        }
+
+        const pwmEl = document.getElementById(`m-pwm-${m.id}`);
+        if (pwmEl) pwmEl.innerText = m.pwm.toFixed(2);
+
+        const tgtEl = document.getElementById(`m-tgt-${m.id}`);
+        if (tgtEl) tgtEl.innerText = m.target_rpm.toFixed(0);
+
+        const rpmEl = document.getElementById(`m-rpm-${m.id}`);
+        if (rpmEl) {
+          rpmEl.style.color = rpmColor;
+          rpmEl.innerText = `${m.rpm.toFixed(0)} / ${m.rpm_true.toFixed(0)}`;
+        }
+
+        const currEl = document.getElementById(`m-curr-${m.id}`);
+        if (currEl) currEl.innerText = `${m.current_a.toFixed(2)} A`;
+
+        const tempEl = document.getElementById(`m-temp-${m.id}`);
+        if (tempEl) tempEl.innerText = `${m.temp_c.toFixed(1)} °C`;
+
+        const faultsEl = document.getElementById(`m-faults-${m.id}`);
+        if (faultsEl) {
+          const faultsHtml = m.faults.map(f =>
+            `<span class="badge badge-danger" style="cursor:pointer;" title="Click to clear/replace" onclick="toggleFault('${m.id}', '${f}')">${f}</span>`
+          ).join(' ') || '<span style="color:var(--success)">OK</span>';
+          if (faultsEl.innerHTML !== faultsHtml) {
+            faultsEl.innerHTML = faultsHtml;
+          }
+        }
+
+        MOTOR_FAULTS.forEach(f => {
+          const btn = document.getElementById(`fault-${m.id}-${f}`);
+          if (btn) {
+            const active = activeFaultsSet.has(`${m.id}:${f}`);
+            const cls = active ? "fault-tag active" : "fault-tag";
+            if (btn.className !== cls) btn.className = cls;
+          }
+        });
+      });
+    }
+
+    function appendLog(e) {
+      const box = document.getElementById("event-log");
+      const d = document.createElement("div");
+      d.className = "log-line";
+
+      let cls = "log-src";
+      if (e.kind === "fault") cls = "log-fault";
+      else if (e.kind === "command") cls = "log-command";
+      else if (e.kind === "warning") cls = "log-warning";
+      else if (e.kind === "system") cls = "log-system";
+
+      d.innerHTML = `<span class="log-t">[${e.t.toFixed(1)}s]</span> <span class="${cls}">&lt;${e.source}&gt;</span> ${escapeHtml(e.text)}`;
+      box.appendChild(d);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Canvas dial drawing for servo
+    function drawServo(target, actual, moving, blocked) {
+      const canvas = document.getElementById("servoCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2, cy = h - 15;
+      const radius = 80;
+
+      // Arc background
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI, 0, false);
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = "#21262d";
+      ctx.stroke();
+
+      // Target indicator tick
+      const radTgt = Math.PI - (target / 180) * Math.PI;
+      const tx = cx + Math.cos(radTgt) * (radius + 2);
+      const ty = cy - Math.sin(radTgt) * (radius + 2);
+      ctx.beginPath();
+      ctx.arc(tx, ty, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = "var(--accent)";
+      ctx.fill();
+
+      // Actual arm needle
+      const radAct = Math.PI - (actual / 180) * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(radAct) * (radius - 10), cy - Math.sin(radAct) * (radius - 10));
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = blocked ? "var(--danger)" : (moving ? "var(--warning)" : "var(--success)");
+      ctx.stroke();
+
+      // Center pivot
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+
+      // Labels
+      ctx.fillStyle = "var(--text-muted)";
+      ctx.font = "10px sans-serif";
+      ctx.fillText("0°", cx - radius - 10, cy + 10);
+      ctx.fillText("90°", cx - 8, cy - radius - 4);
+      ctx.fillText("180°", cx + radius - 6, cy + 10);
+    }
+
+    // Start WebSocket
+    connectWS();
+  </script>
+</body>
+</html>

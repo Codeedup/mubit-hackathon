@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "description": "Public synthetic fixture keys. Never include this file in a diagnosis request. Held-out cases are reserved for evaluation after the task instructions are frozen.",
+  "cases": [
+    {
+      "incident_id": "DEV-001",
+      "split": "development",
+      "actual_cause": "wheel obstruction",
+      "rationale": "A simulated obstruction prevents left-wheel rotation while the motor draws current."
+    },
+    {
+      "incident_id": "DEV-002",
+      "split": "development",
+      "actual_cause": "motor power/driver path",
+      "rationale": "The simulated driver supply is below its expected operating range."
+    },
+    {
+      "incident_id": "DEV-003",
+      "split": "development",
+      "actual_cause": "encoder/reporting fault",
+      "rationale": "The simulated wheel moves while reported encoder ticks remain zero."
+    },
+    {
+      "incident_id": "HOLD-001",
+      "split": "held_out",
+      "actual_cause": "wheel obstruction",
+      "rationale": "A simulated blockage at the right wheel explains zero speed with current draw."
+    },
+    {
+      "incident_id": "HOLD-002",
+      "split": "held_out",
+      "actual_cause": "motor power/driver path",
+      "rationale": "The simulated supply sag prevents normal driver operation."
+    },
+    {
+      "incident_id": "HOLD-003",
+      "split": "held_out",
+      "actual_cause": "encoder/reporting fault",
+      "rationale": "Movement with no reported ticks points to the reporting path."
+    },
+    {
+      "incident_id": "HOLD-004",
+      "split": "held_out",
+      "actual_cause": "wheel obstruction",
+      "rationale": "The synthetic case defines a cable blocking the wheel."
+    },
+    {
+      "incident_id": "HOLD-005",
+      "split": "held_out",
+      "actual_cause": "motor power/driver path",
+      "rationale": "The synthetic case defines a driver output failure."
+    },
+    {
+      "incident_id": "HOLD-006",
+      "split": "held_out",
+      "actual_cause": "wheel obstruction",
+      "rationale": "A simulated object blocks the right wheel."
+    },
+    {
+      "incident_id": "HOLD-007",
+      "split": "held_out",
+      "actual_cause": "encoder/reporting fault",
+      "rationale": "The synthetic case defines an intermittent encoder signal."
+    },
+    {
+      "incident_id": "HOLD-008",
+      "split": "held_out",
+      "actual_cause": "motor power/driver path",
+      "rationale": "The synthetic case defines an open motor driver path."
+    }
+  ]
+}

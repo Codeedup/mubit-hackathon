@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "DEV-001",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T09:00:00Z to 2026-10-24T09:00:03Z",
+  "commanded_action": "Drive forward for 3 seconds",
+  "readings": [
+    {
+      "sensor": "left_wheel_speed",
+      "value": 0,
+      "unit": "rpm",
+      "origin": "synthetic",
+      "time": "2026-10-24T09:00:00Z"
+    },
+    {
+      "sensor": "left_motor_current",
+      "value": 1.8,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T09:00:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "Left wheel stopped while the command was active.",
+  "source_type": "synthetic"
+}

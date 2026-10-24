@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-008",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T11:10:00Z to 2026-10-24T11:10:03Z",
+  "commanded_action": "Drive backward for 3 seconds",
+  "readings": [
+    {
+      "sensor": "driver_supply",
+      "value": 7.3,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T11:10:00Z"
+    },
+    {
+      "sensor": "motor_terminal_voltage",
+      "value": 0,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T11:10:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "The driver had supply voltage but the motor terminal did not.",
+  "source_type": "synthetic"
+}

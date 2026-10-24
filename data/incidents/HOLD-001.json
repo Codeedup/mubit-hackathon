@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-001",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T10:00:00Z to 2026-10-24T10:00:02Z",
+  "commanded_action": "Drive backward for 2 seconds",
+  "readings": [
+    {
+      "sensor": "right_wheel_speed",
+      "value": 0,
+      "unit": "rpm",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:00:00Z"
+    },
+    {
+      "sensor": "right_motor_current",
+      "value": 2,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:00:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "Right wheel resisted movement during the reverse command.",
+  "source_type": "synthetic"
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "DEV-002",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T09:10:00Z to 2026-10-24T09:10:03Z",
+  "commanded_action": "Drive forward for 3 seconds",
+  "readings": [
+    {
+      "sensor": "driver_supply",
+      "value": 4.1,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T09:10:00Z"
+    },
+    {
+      "sensor": "wheel_speed",
+      "value": 0,
+      "unit": "rpm",
+      "origin": "synthetic",
+      "time": "2026-10-24T09:10:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "Both motors failed to turn during the command.",
+  "source_type": "synthetic"
+}

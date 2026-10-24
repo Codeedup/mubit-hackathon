@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "id": "HOLD-004",
+  "robot_type": "two-wheel rover (simulated)",
+  "time_window": "2026-10-24T10:30:00Z to 2026-10-24T10:30:02Z",
+  "commanded_action": "Drive forward for 2 seconds",
+  "readings": [
+    {
+      "sensor": "left_wheel_speed",
+      "value": 0,
+      "unit": "rpm",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:30:00Z"
+    },
+    {
+      "sensor": "left_motor_current",
+      "value": 1.6,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T10:30:00Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "Left wheel stopped during the drive command.",
+  "source_type": "synthetic"
+}
