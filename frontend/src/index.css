@@ -206,6 +206,7 @@ code { font-family: var(--code); font-size: 0.82em; }
 .diagnosis-sheet { background: var(--sheet-pen); position: sticky; top: 72px; max-height: calc(100vh - 92px); overflow-y: auto; }
 .by-line { margin: 0; font-size: 14px; color: var(--pen); }
 .cause { font-family: var(--narrow); font-weight: 600; font-size: 42px; line-height: 1.02; color: var(--pen); margin: 6px 0 14px; letter-spacing: -0.01em; }
+.downgrade { margin: 0 0 14px; padding: 8px 10px; border-left: 3px solid var(--miss); background: var(--miss-soft); font-size: 14px; }
 .uncertainty { display: flex; align-items: center; gap: 12px; font-size: 14px; }
 .uncertainty-label { color: var(--steel); }
 .uncertainty-scale { display: inline-flex; border: 1px solid var(--pen); border-radius: 4px; overflow: hidden; }

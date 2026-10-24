@@ -30,6 +30,11 @@ export function providerLine(record: DiagnosisRecord): string {
     : 'the offline rule fixture (not a model)'
 }
 
+/** Newer records: the model only picks a label; the app's rules find the supporting reading. */
+function rulesBuilt(record: DiagnosisRecord): boolean {
+  return record.advisory_source === 'application_rules'
+}
+
 export function DiagnosisSheet(props: Props) {
   const { record, state, provider, onDiagnose } = props
   const canDiagnose = provider === 'mubit' || provider === 'local_fixture'
@@ -48,7 +53,7 @@ export function DiagnosisSheet(props: Props) {
         <div className="diagnosis-empty">
           <h2 id="diagnosis-heading">No diagnosis yet</h2>
           <p>
-            {provider === 'mubit' && 'Send this case to Gemini through Mubit. The answer must cite fields from the incident or it is rejected.'}
+            {provider === 'mubit' && 'Gemini classifies this case through Mubit. The app then looks for a reading that supports the label, and marks it unknown if there is none.'}
             {provider === 'local_fixture' && 'The backend is using the offline rule fixture. Set ROBO_MEDIC_PROVIDER=mubit to diagnose through Mubit.'}
             {provider === 'missing_credentials' && 'Mubit is selected but the backend has no MUBIT_API_KEY. Add it to .env and restart the backend.'}
             {provider === 'not_configured' && 'No diagnosis provider is set. Set ROBO_MEDIC_PROVIDER=mubit in .env and restart the backend.'}
@@ -77,7 +82,7 @@ function Pending({ startedAt, provider }: { startedAt: number; provider: Metrics
         {provider === 'mubit' ? 'Waiting for Gemini through Mubit' : 'Running the fixture'}
       </h2>
       <p className="pending-time">{((now - startedAt) / 1000).toFixed(1)} s</p>
-      <p>The backend checks every cited field against the incident before saving.</p>
+      <p>The backend checks the answer against the readings before saving it.</p>
     </div>
   )
 }
@@ -104,10 +109,20 @@ function Result({
 
   return (
     <>
-      <p className="by-line">Diagnosis from {providerLine(record)}, {relativeTime(record.created_at)}</p>
+      <p className="by-line">
+        {rulesBuilt(record)
+          ? `${record.model_id} classified this through Mubit, ${relativeTime(record.created_at)}. The evidence and next check come from the app’s rules.`
+          : `Diagnosis from ${providerLine(record)}, ${relativeTime(record.created_at)}`}
+      </p>
       <h2 id="diagnosis-heading" className={`cause cause-${diagnosis.cause_label.split(/[ /]/)[0]}`}>
         {diagnosis.cause_label === 'unknown' ? 'Cause unknown' : capitalise(diagnosis.cause_label)}
       </h2>
+
+      {record.model_label && record.model_label !== diagnosis.cause_label && (
+        <p className="downgrade">
+          The model said <strong>{record.model_label}</strong>, but no reading supports it, so this is marked unknown.
+        </p>
+      )}
 
       <div className="uncertainty" aria-label={`Uncertainty ${diagnosis.uncertainty}`}>
         <span className="uncertainty-label">Uncertainty</span>
@@ -118,7 +133,7 @@ function Result({
         </span>
       </div>
 
-      <h3 className="part-heading">Evidence it cited</h3>
+      <h3 className="part-heading">{rulesBuilt(record) ? 'Evidence in the readings' : 'Evidence it cited'}</h3>
       <ol className="evidence">
         {diagnosis.supporting_evidence.map((item, index) => {
           const target = evidenceTarget(item.field)
@@ -166,7 +181,7 @@ function Result({
         <div><dt>Saved as</dt><dd><code title={record.id}>{record.id.slice(0, 8)}</code></dd></div>
       </dl>
       <details className="raw">
-        <summary>Raw model response</summary>
+        <summary>Raw model reply</summary>
         <pre>{pretty(record.raw_response)}</pre>
       </details>
 
