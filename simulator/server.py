@@ -246,7 +246,7 @@ def main() -> None:
     p.add_argument("--host", default="127.0.0.1", help="Use 0.0.0.0 only when network access is intended")
     p.add_argument("--port", type=int, default=8001)
     a = p.parse_args()
-    print(f"\n  Dashboard:  http://localhost:{a.port}\n  Listeners:  ws://<this-machine-ip>:{a.port}/ws/telemetry\n")
+    print(f"\n  Dashboard:  http://{a.host}:{a.port}\n  Listeners:  ws://{a.host}:{a.port}/ws/telemetry\n")
     uvicorn.run(app, host=a.host, port=a.port, log_level="warning")
 
 

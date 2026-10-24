@@ -20,9 +20,7 @@
       "time": "2026-10-24T10:40:00Z"
     }
   ],
-  "fault_codes": [
-    "DRIVER_OUTPUT_FAULT"
-  ],
+  "fault_codes": [],
   "technician_note": "The motor driver output stayed inactive despite a turn command.",
   "source_type": "synthetic"
 }

@@ -9,7 +9,7 @@ A local, synthetic real-time physics and firmware simulator for a 4-wheel skid-s
 Run from the repository root (`mubit-hackathon/`):
 
 ```bash
-python3 -m simulator.server --port 8001
+python3 -m simulator.server --host 127.0.0.1 --port 8001
 ```
 
 - **Interactive Dashboard:** [http://localhost:8001](http://localhost:8001)

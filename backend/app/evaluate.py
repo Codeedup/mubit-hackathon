@@ -36,16 +36,22 @@ def evaluate_synthetic(keys_path: Path, split: str, provider_kind: str) -> dict:
     if len({key.incident_id for key in selected}) != len(selected):
         raise ValueError("Duplicate incident IDs in synthetic answer keys")
     initialize_database()
-    latest = {}
-    for record in list_diagnoses():
-        if record.provider_kind == provider_kind and record.incident_id not in latest:
-            latest[record.incident_id] = record
+    # Use the first prediction for a case. Later runs may have seen its saved
+    # technician correction and must not improve an evaluation score.
+    first = {}
+    for record in reversed(list_diagnoses()):
+        if record.incident_id not in first:
+            first[record.incident_id] = record
     cases = []
     missing = []
+    excluded_leaky = []
     for key in selected:
-        record = latest.get(key.incident_id)
-        if record is None:
+        record = first.get(key.incident_id)
+        if record is None or record.provider_kind != provider_kind:
             missing.append(key.incident_id)
+            continue
+        if record.incident.source_type != "synthetic" or record.incident.fault_codes:
+            excluded_leaky.append(key.incident_id)
             continue
         cases.append({
             "incident_id": key.incident_id,
@@ -60,11 +66,13 @@ def evaluate_synthetic(keys_path: Path, split: str, provider_kind: str) -> dict:
         "source": "synthetic_answer_key",
         "split": split,
         "provider_kind": provider_kind,
+        "selection_policy": "first_stored_diagnosis_per_incident_across_providers",
         "key_count": len(selected),
         "evaluated": len(cases),
         "matched": matched,
         "accuracy": matched / len(cases) if cases else None,
         "missing_incident_ids": missing,
+        "excluded_leaky_incident_ids": excluded_leaky,
         "cases": cases,
     }
 

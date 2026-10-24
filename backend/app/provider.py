@@ -55,9 +55,53 @@ class LocalFixtureProvider:
     """Rule-based fixture for exercising storage and API flow without credentials."""
 
     def diagnose(self, incident: Incident) -> ProviderResponse:
-        signals = " ".join(incident.fault_codes).upper()
-        if ("WHEEL_STALL" in signals or "OBSTRUCTION" in signals
-                or ("SIM_N20_" in signals and ("_STALL" in signals or "_JAM" in signals))):
+        signals = " ".join(incident.fault_codes).upper() if incident.source_type != "synthetic" else ""
+        readings = {reading.sensor: (index, reading.value)
+                    for index, reading in enumerate(incident.readings)}
+
+        def number(sensor: str) -> float | None:
+            item = readings.get(sensor)
+            value = item[1] if item else None
+            return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+        evidence_index: int | None = None
+        motion = readings.get("observed_wheel_motion")
+        ticks = number("reported_encoder_ticks")
+        driver_supply = number("driver_supply")
+        driver_output = readings.get("driver_output_state")
+        terminal_voltage = number("motor_terminal_voltage")
+        stalled_wheel = next((name for name in ("left", "right")
+                              if number(f"{name}_wheel_speed") == 0
+                              and (number(f"{name}_motor_current") or 0) >= 1), None)
+        stalled_motor = next((name for name in ("n20_fl", "n20_fr", "n20_rl", "n20_rr")
+                              if (number(f"{name}.target_rpm") or 0) > 1
+                              and number(f"{name}.rpm") == 0
+                              and (number(f"{name}.current_a") or 0) >= 0.5), None)
+        if motion and motion[1] in {"moving", "rotating"} and ticks is not None and ticks <= 1:
+            cause = "encoder/reporting fault"
+            alternative = "wheel obstruction"
+            next_check = "Inspect encoder wiring and compare reported ticks with observed wheel movement."
+            uncertainty = "medium"
+            evidence_index = readings["reported_encoder_ticks"][0]
+        elif ((driver_supply is not None and driver_supply < 5)
+              or (driver_output is not None and driver_output[1] == "inactive")
+              or (terminal_voltage is not None and terminal_voltage < 1
+                  and driver_supply is not None and driver_supply > 5)):
+            cause = "motor power/driver path"
+            alternative = "wheel obstruction"
+            next_check = "With a safe test setup, inspect the driver supply and motor wiring."
+            uncertainty = "medium"
+            evidence_index = (readings.get("driver_supply") or driver_output
+                              or readings["motor_terminal_voltage"])[0]
+        elif stalled_wheel or stalled_motor:
+            cause = "wheel obstruction"
+            alternative = "motor power/driver path"
+            next_check = "With power isolated, inspect the wheel and drivetrain for a physical blockage."
+            uncertainty = "medium"
+            name = (f"{stalled_wheel}_motor_current" if stalled_wheel
+                    else f"{stalled_motor}.current_a")
+            evidence_index = readings[name][0]
+        elif "WHEEL_STALL" in signals or "OBSTRUCTION" in signals:
             cause = "wheel obstruction"
             alternative = "motor power/driver path"
             next_check = "With power isolated, inspect the wheel and drivetrain for a physical blockage."
@@ -80,8 +124,8 @@ class LocalFixtureProvider:
 
         evidence = (
             {"field": "fault_codes[0]", "explanation": "The supplied fault code is a diagnostic clue, not confirmation."}
-            if incident.fault_codes else
-            {"field": "readings[0].value", "explanation": "The supplied reading alone does not confirm a cause."}
+            if evidence_index is None and incident.fault_codes and incident.source_type != "synthetic" else
+            {"field": f"readings[{evidence_index or 0}].value", "explanation": "The supplied telemetry is a diagnostic clue, not confirmation."}
         )
         result = {
             "cause_label": cause,

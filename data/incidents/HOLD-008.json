@@ -20,9 +20,7 @@
       "time": "2026-10-24T11:10:00Z"
     }
   ],
-  "fault_codes": [
-    "DRIVER_PATH_OPEN"
-  ],
+  "fault_codes": [],
   "technician_note": "The driver had supply voltage but the motor terminal did not.",
   "source_type": "synthetic"
 }

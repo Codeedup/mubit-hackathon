@@ -20,9 +20,7 @@
       "time": "2026-10-24T11:00:00Z"
     }
   ],
-  "fault_codes": [
-    "ENCODER_INTERMITTENT"
-  ],
+  "fault_codes": [],
   "technician_note": "The wheel moved through several turns while ticks barely changed.",
   "source_type": "synthetic"
 }

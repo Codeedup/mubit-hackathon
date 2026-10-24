@@ -16,7 +16,7 @@ From the repository root, start the backend:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
-uvicorn backend.app.main:app --reload --port 8000
+uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal, start the frontend:
@@ -30,7 +30,7 @@ npm run dev
 To capture simulated faults, start the simulator in another terminal:
 
 ```powershell
-python -m simulator.server --port 8001
+python -m simulator.server --host 127.0.0.1 --port 8001
 ```
 
 Its control dashboard is at `http://localhost:8001`. The backend polls its
@@ -43,7 +43,7 @@ Vite proxies `/api` to port 8000. The default browser origin is
 `http://localhost:5173`.
 
 Copy `.env.example` to `.env` to override the database path, incident directory,
-CORS origin, provider mode, or simulator URL. `.env` and the local SQLite database are ignored
+CORS origin, provider mode, simulator URL, or captured answer-key directory. `.env` and the local SQLite database are ignored
 by Git. Credentials must remain server-side; no external credentials are used
 by the current implementation.
 
@@ -54,7 +54,7 @@ in that mode. To exercise the complete API flow without keys, set
 `ROBO_MEDIC_PROVIDER=local_fixture` in `.env` and restart the backend. This is a
 deterministic rule-based fixture, not a model or Mubit request. Its records carry
 `provider_kind=local_fixture`, `model_id=local-rule-fixture-v1`, and a
-`local-fixture:` request reference. Task and adapter status remain unavailable.
+`local-fixture:` request reference. Task, training, and adapter status remain unavailable.
 
 ## Data contract and provenance
 
@@ -71,15 +71,21 @@ Three are development examples; eight IDs beginning `HOLD-` are reserved for
 held-out evaluation. Their answer keys are in
 `data/evaluation/answer_keys.synthetic.json`, separate from incident files and
 never supplied to the diagnosis provider. These are public synthetic fixture
-keys, not private or physical inspection records. Do not tune task instructions
+keys, not private or physical inspection records. The incident files contain
+observable readings and symptom notes, but no injected fault labels or
+cause-specific fault codes. Do not tune task instructions
 against held-out results before the baseline run.
 
 Captured simulator incidents are also **synthetic**. Each reading uses the
 backend's `sensor`, `value`, `unit`, `origin`, and timezone-aware `time`
 fields. A metric is named in `sensor`, for example `n20_fl.rpm`; simulator
 packet defaults and ground-truth fault labels are not presented as measured
-readings or diagnosis evidence. The simulator's fault code is a diagnostic
-clue, and the provider's cause stays within the backend's label vocabulary.
+readings or diagnosis evidence. Captured incidents have `source_type=synthetic`,
+synthetic reading origins, and no fault code derived from the injected label.
+Each injected label is stored separately in
+`data/evaluation/captured/<incident_id>.json` (configurable with
+`ROBO_MEDIC_CAPTURED_KEYS_DIR`). Those raw capture keys need an adjudicated cause
+mapping before they can be scored with the synthetic evaluation command.
 
 The diagnosis cause labels are `wheel obstruction`, `motor power/driver path`,
 `encoder/reporting fault`, and `unknown`. Evidence uses `{field, explanation}`;
@@ -100,7 +106,7 @@ workflow are verified.
 | `POST` | `/api/confirm` | Save one technician-confirmed outcome per diagnosis without changing the prediction |
 | `GET` | `/api/repairs` | Repair history with cause, fix, inspection note, verification kind, and prediction match; can filter by `incident_id` |
 | `GET` | `/api/evaluation/confirmed` | Accuracy against inspected physical outcomes, grouped by provider and model |
-| `GET` | `/api/metrics` | Local counts, simulator intake status, and provider/task/adapter status |
+| `GET` | `/api/metrics` | Local counts, simulator intake status, and separate provider, task, Mubit training, and adapter status |
 
 Example diagnosis request:
 
@@ -145,16 +151,26 @@ recent confirmed diagnosis for each incident contributes one case to accuracy;
 `confirmed_diagnosis_count` also reports all confirmed runs. An empty group has
 no accuracy value. This is diagnostic accuracy against verified causes.
 
+Technician confirmations remain local repair history. They are ground truth for
+the inspected-case evaluation above; saving one does not submit a correction,
+start training, or establish an adapter. `/api/metrics` reports Mubit training
+and adapter status as `unavailable` because neither integration exists yet.
+
 Synthetic answer-key evaluation is a separate offline command. It scores the
-latest stored diagnosis for each case in the chosen split and provider kind:
+first stored diagnosis for each case across providers, before any later saved
+correction can influence a rerun. A case whose first diagnosis belongs to a
+different provider is reported missing for the requested provider.
+Previously saved synthetic diagnoses whose incident snapshots contain fault
+codes are excluded from this score, since older simulator captures and fixtures
+could encode the injected answer there. Run it with:
 
 ```powershell
 python -m backend.app.evaluate --split development --provider-kind local_fixture
 python -m backend.app.evaluate --split held_out --provider-kind local_fixture
 ```
 
-The output includes the key count, evaluated count, missing case IDs, exact
-matches, and per-case predictions. Missing predictions are not silently counted
+The output includes the key count, evaluated count, missing and excluded case
+IDs, exact matches, and per-case predictions. Missing predictions are not silently counted
 as successes. Keep development and held-out results separate. Neither of these
 accuracy measures is Mubit’s adapter-to-provider agreement test; no adapter
 result is available yet.
@@ -168,9 +184,10 @@ pip install -r backend/requirements-dev.txt
 python -m unittest discover -s backend/tests -v
 ```
 
-The frontend currently loads incident lists and local counts, displays readings
-as a count, and leaves diagnosis and feedback controls disabled. It does not
-yet use the new backend routes. The local fixture is for software flow checks;
+The frontend supports diagnosis, technician outcome logging, repair history,
+and inspected-case evaluation. It displays Mubit training and adapter status
+separately from local outcome counts. The local fixture is for software flow
+checks;
 its predictions are not evidence of model performance. There is no live Mubit
 diagnosis, correction submission, task status, adapter training, or adapter
 evaluation. The API currently has no authentication and is intended for local

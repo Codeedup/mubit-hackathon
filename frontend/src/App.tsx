@@ -299,7 +299,7 @@ function Diagnostics({
                 <EmptyState
                   icon={Activity}
                   title="Waiting for live incident"
-                  description="Trigger a fault in the simulator at http://localhost:8001. Its live waveforms, fault codes, and telemetry symptoms will appear here automatically."
+                  description="Trigger a fault in the simulator at http://localhost:8001. Its synthetic telemetry and observable symptoms will appear here automatically."
                 />
               )}
               <div className="action-bar">
@@ -432,7 +432,7 @@ function Feedback({
         verifier: verifier.trim(),
         timestamp: new Date().toISOString(),
       })
-      setSuccessMsg(`Outcome recorded for ${currentDiag.incident_id}.`)
+      setSuccessMsg(`Outcome saved to local repair history for ${currentDiag.incident_id}.`)
       reloadAll()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -444,9 +444,9 @@ function Feedback({
   if (diagnoses.length === 0) {
     return (
       <Card className="full-card">
-        <CardHeader><div><div className="eyebrow">VERIFIED OUTCOMES</div><h2>Technician Feedback</h2></div><Badge>Awaiting diagnosis</Badge></CardHeader>
+        <CardHeader><div><div className="eyebrow">REPAIR HISTORY</div><h2>Technician Feedback</h2></div><Badge>Awaiting diagnosis</Badge></CardHeader>
         <CardContent>
-          <EmptyState icon={ClipboardCheck} title="No diagnosis to verify" description="Run a diagnosis on a live incident in the Diagnostics tab first. Then confirm the actual cause and fix here." />
+          <EmptyState icon={ClipboardCheck} title="No diagnosis to review" description="Run a diagnosis in the Diagnostics tab first. Then record the observed cause and fix for repair history. Inspected physical outcomes can support evaluation." />
           <div className="step-row"><span>01 <Check size={15} /> Trigger incident in simulator</span><span>02 <Check size={15} /> Record diagnosis</span><span>03 <Check size={15} /> Confirm outcome</span></div>
         </CardContent>
       </Card>
@@ -510,7 +510,7 @@ function Feedback({
               {alreadyConfirmed ? (
                 <div className="incident-detail" style={{ padding: 0 }}>
                   <dl>
-                    <div><dt>Verified actual cause</dt><dd><strong>{alreadyConfirmed.actual_cause}</strong></dd></div>
+                    <div><dt>Recorded actual cause</dt><dd><strong>{alreadyConfirmed.actual_cause}</strong></dd></div>
                     <div><dt>Fix performed</dt><dd>{alreadyConfirmed.fix_performed}</dd></div>
                     <div><dt>Inspection note</dt><dd>{alreadyConfirmed.inspection_note}</dd></div>
                     <div><dt>Evidence kind</dt><dd>{alreadyConfirmed.verification_kind}</dd></div>
@@ -630,7 +630,7 @@ function Intelligence({
               description="A technician must record a physical inspection before an outcome contributes to confirmed accuracy." />
           )}
           <p style={{ marginTop: 16, fontSize: 12, color: '#627286' }}>
-            {simulated} simulator outcome(s) recorded separately from inspected accuracy.
+            {simulated} simulator outcome(s) recorded separately from inspected accuracy. These local outcomes are repair history and evaluation data; they do not train a Mubit adapter.
           </p>
         </CardContent>
       </Card>
@@ -641,6 +641,8 @@ function Intelligence({
           <div className="status-list">
             <div><Database size={19} /><span><strong>Local SQLite store</strong><small>Diagnosis and outcome records persist across restarts.</small></span><Badge>{metrics.status === 'ready' ? 'Ready' : 'Pending'}</Badge></div>
             <div><Activity size={19} /><span><strong>Diagnosis provider</strong><small>Configured provider and evidence validation.</small></span><Badge>{metrics.status === 'ready' ? metrics.data.provider_status : 'Pending'}</Badge></div>
+            <div><Sparkles size={19} /><span><strong>Mubit training</strong><small>No training job or confirmation submission is configured.</small></span><Badge>{metrics.status === 'ready' ? metrics.data.training_status : 'Pending'}</Badge></div>
+            <div><ShieldCheck size={19} /><span><strong>Mubit adapter</strong><small>No adapter ID, training result, or evaluation is available.</small></span><Badge>{metrics.status === 'ready' ? metrics.data.adapter_status : 'Pending'}</Badge></div>
             <div><Bot size={19} /><span><strong>Simulator intake</strong><small>Local synthetic telemetry from port 8001.</small></span><Badge>{metrics.status === 'ready' && metrics.data.simulator_online ? 'Online' : 'Offline'}</Badge></div>
           </div>
         </CardContent>

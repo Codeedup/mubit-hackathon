@@ -79,6 +79,7 @@ export type Metrics = {
   confirmation_count: number
   provider_status: 'not_configured' | 'local_fixture'
   task_status: 'unavailable'
+  training_status: 'unavailable'
   adapter_status: 'unavailable'
   simulator_online: boolean
 }

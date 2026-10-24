@@ -20,9 +20,7 @@
       "time": "2026-10-24T09:20:00Z"
     }
   ],
-  "fault_codes": [
-    "ENCODER_SIGNAL_MISSING"
-  ],
+  "fault_codes": [],
   "technician_note": "Wheel motion was simulated while the encoder count stayed at zero.",
   "source_type": "synthetic"
 }

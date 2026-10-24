@@ -9,6 +9,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from backend.app import db, incidents
+from backend.app.evaluate import evaluate_synthetic
 from backend.app.main import app, provider_dependency
 from backend.app.provider import LocalFixtureProvider, ProviderResponse
 
@@ -86,6 +87,10 @@ class BackendSafetyTests(unittest.TestCase):
             simulation = confirm(synthetic_id, "DEV-001", "wheel obstruction")
             self.assertEqual(simulation.json()["verification_kind"], "synthetic_simulation")
             self.assertEqual(len(client.get("/api/repairs").json()), 3)
+            metrics = client.get("/api/metrics").json()
+            self.assertEqual(metrics["confirmation_count"], 3)
+            self.assertEqual(metrics["training_status"], "unavailable")
+            self.assertEqual(metrics["adapter_status"], "unavailable")
             group = client.get("/api/evaluation/confirmed").json()["groups"][0]
             self.assertEqual((group["total"], group["confirmed_diagnosis_count"]), (1, 2))
             self.assertEqual((group["matched"], group["accuracy"]), (0, 0.0))
@@ -96,6 +101,59 @@ class BackendSafetyTests(unittest.TestCase):
 
         with TestClient(app) as restarted:
             self.assertEqual(len(restarted.get("/api/repairs").json()), 3)
+
+    def test_synthetic_score_uses_prediction_before_saved_correction(self):
+        class CorrectedProvider:
+            def diagnose(self, _incident):
+                return ProviderResponse(json.dumps({
+                    "cause_label": "motor power/driver path",
+                    "supporting_evidence": [{"field": "readings[0].value", "explanation": "Current reading."}],
+                    "alternative": "wheel obstruction",
+                    "next_check": "Inspect the driver supply.",
+                    "uncertainty": "medium",
+                }), "later-request", "local-rule-fixture-v1", "local_fixture")
+
+        keys_path = Path(self.temporary.name) / "keys.json"
+        keys_path.write_text(json.dumps({
+            "schema_version": "1.0", "description": "Evaluation boundary fixture",
+            "cases": [{"incident_id": "DEV-001", "split": "held_out",
+                       "actual_cause": "motor power/driver path", "rationale": "Test correction leakage."}],
+        }), encoding="utf-8")
+        with TestClient(app) as client:
+            app.dependency_overrides[provider_dependency] = LocalFixtureProvider
+            first = client.post("/api/diagnose", json={"incident_id": "DEV-001"}).json()
+            client.post("/api/confirm", json={
+                "diagnosis_id": first["id"], "incident_id": "DEV-001",
+                "actual_cause": "motor power/driver path", "fix_performed": "Checked wiring.",
+                "inspection_note": "Synthetic answer revealed the cause.",
+                "verifier": "test operator", "timestamp": "2026-10-24T12:00:00Z",
+            })
+            app.dependency_overrides[provider_dependency] = CorrectedProvider
+            later = client.post("/api/diagnose", json={"incident_id": "DEV-001"}).json()
+            self.assertEqual(later["diagnosis"]["cause_label"], "motor power/driver path")
+            score = evaluate_synthetic(keys_path, "held_out", "local_fixture")
+            self.assertEqual(score["cases"][0]["diagnosis_id"], first["id"])
+            self.assertEqual(score["matched"], 0)
+
+    def test_synthetic_score_excludes_legacy_label_codes(self):
+        incident_path = Path(self.temporary.name) / "incidents" / "DEV-001.json"
+        incident = json.loads(incident_path.read_text(encoding="utf-8"))
+        incident["fault_codes"] = ["SIM_N20_FL_JAM"]
+        incident_path.write_text(json.dumps(incident), encoding="utf-8")
+        keys_path = Path(self.temporary.name) / "keys.json"
+        keys_path.write_text(json.dumps({
+            "schema_version": "1.0", "description": "Leakage boundary fixture",
+            "cases": [{"incident_id": "DEV-001", "split": "held_out",
+                       "actual_cause": "wheel obstruction", "rationale": "Injected test fault."}],
+        }), encoding="utf-8")
+        app.dependency_overrides[provider_dependency] = LocalFixtureProvider
+        with TestClient(app) as client:
+            response = client.post("/api/diagnose", json={"incident_id": "DEV-001"})
+            self.assertEqual(response.status_code, 201)
+            self.assertEqual(response.json()["diagnosis"]["supporting_evidence"][0]["field"], "readings[1].value")
+            score = evaluate_synthetic(keys_path, "held_out", "local_fixture")
+            self.assertEqual(score["evaluated"], 0)
+            self.assertEqual(score["excluded_leaky_incident_ids"], ["DEV-001"])
 
 
 if __name__ == "__main__":

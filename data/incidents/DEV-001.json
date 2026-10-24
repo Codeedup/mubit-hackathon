@@ -20,9 +20,7 @@
       "time": "2026-10-24T09:00:00Z"
     }
   ],
-  "fault_codes": [
-    "WHEEL_STALL"
-  ],
+  "fault_codes": [],
   "technician_note": "Left wheel stopped while the command was active.",
   "source_type": "synthetic"
 }

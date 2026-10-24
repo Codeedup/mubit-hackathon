@@ -13,7 +13,7 @@ from uuid import uuid4
 from pydantic import ValidationError
 
 from .schemas import Incident
-from .settings import INCIDENT_DIR, SIMULATOR_URL
+from .settings import CAPTURED_KEYS_DIR, INCIDENT_DIR, SIMULATOR_URL
 
 
 def simulator_json(path: str) -> dict | None:
@@ -56,16 +56,15 @@ def _readings(packets: list[dict], component: str) -> list[dict]:
     return readings
 
 
-def build_incident(packets: list[dict], component: str, fault: str) -> Incident:
-    if not packets or not component or not fault:
-        raise ValueError("Simulator incident requires packets and a fault")
+def build_incident(packets: list[dict], component: str, _fault: str | None = None) -> Incident:
+    if not packets or not component:
+        raise ValueError("Simulator incident requires packets and a component")
     latest = packets[-1]
     if latest.get("schema") != "robot.telemetry.v1":
         raise ValueError("Unsupported simulator packet schema")
     readings = _readings(packets, component)
     if not readings:
         raise ValueError("Simulator fault has no valid readings")
-    code = f"SIM_{component}_{fault}".upper().replace("-", "_")
     action = "Simulator telemetry snapshot"
     if component.startswith("n20_"):
         motors = latest.get("motors")
@@ -83,8 +82,8 @@ def build_incident(packets: list[dict], component: str, fault: str) -> Incident:
         time_window=f"{packets[0].get('ts', 'unknown')} to {latest.get('ts', 'unknown')}",
         commanded_action=action,
         readings=readings,
-        fault_codes=[code],
-        technician_note=f"Simulator reported {fault} on {component}; synthetic telemetry, not a physical inspection.",
+        fault_codes=[],
+        technician_note=f"Synthetic telemetry captured for {component}; no physical inspection was performed.",
         source_type="synthetic",
     )
 
@@ -94,6 +93,7 @@ class SimulatorLiveMonitor:
         self.packets: deque[dict] = deque(maxlen=12)
         self.last_seq: tuple[object, object] | None = None
         self.recorded: set[tuple[str, str]] = set()
+        self.observed_fault_packets: dict[tuple[str, str], int] = {}
         self.online = False
 
     async def poll(self) -> None:
@@ -105,10 +105,12 @@ class SimulatorLiveMonitor:
         if not self.online:
             return
         seq = (packet.get("boot_id"), packet.get("seq"))
-        if seq != self.last_seq:
+        fresh_packet = seq != self.last_seq
+        if fresh_packet:
             if self.last_seq is not None and seq[0] != self.last_seq[0]:
                 self.packets.clear()
                 self.recorded.clear()
+                self.observed_fault_packets.clear()
             self.packets.append(packet)
             self.last_seq = seq
         active = {
@@ -118,18 +120,41 @@ class SimulatorLiveMonitor:
             and isinstance(item.get("fault"), str)
         }
         self.recorded.intersection_update(active)
+        self.observed_fault_packets = {
+            key: count for key, count in self.observed_fault_packets.items() if key in active
+        }
         for component, fault in active - self.recorded:
-            if len(self.packets) < 2:
+            key = (component, fault)
+            if fresh_packet:
+                self.observed_fault_packets[key] = self.observed_fault_packets.get(key, 0) + 1
+            # The first packet may predate injection because state and packet are
+            # fetched separately. Use the next two fresh packets as evidence.
+            if self.observed_fault_packets.get(key, 0) < 3:
                 continue
             try:
-                incident = build_incident(list(self.packets), component, fault)
+                incident = build_incident(list(self.packets)[-2:], component)
             except (ValueError, TypeError, ValidationError):
                 continue
+            # The injected label is persisted only in the separate answer key.
+            # Write it first so an incident cannot become diagnosable without a key.
+            CAPTURED_KEYS_DIR.mkdir(parents=True, exist_ok=True)
+            key_path = CAPTURED_KEYS_DIR / f"{incident.id}.json"
+            with key_path.open("x", encoding="utf-8") as output:
+                json.dump({"schema_version": "1.0", "incident_id": incident.id,
+                           "component": component, "injected_fault": fault,
+                           "source_type": "synthetic"}, output, indent=2)
+                output.write("\n")
             INCIDENT_DIR.mkdir(parents=True, exist_ok=True)
             path = INCIDENT_DIR / f"{incident.id}.json"
-            with path.open("x", encoding="utf-8") as output:
-                output.write(incident.model_dump_json(indent=2) + "\n")
+            try:
+                with path.open("x", encoding="utf-8") as output:
+                    output.write(incident.model_dump_json(indent=2) + "\n")
+            except OSError:
+                path.unlink(missing_ok=True)
+                key_path.unlink(missing_ok=True)
+                raise
             self.recorded.add((component, fault))
+            self.observed_fault_packets.pop(key, None)
 
     async def run(self) -> None:
         while True:

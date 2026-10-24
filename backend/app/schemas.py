@@ -173,5 +173,6 @@ class Metrics(StrictModel):
     confirmation_count: int
     provider_status: Literal["not_configured", "local_fixture"]
     task_status: Literal["unavailable"] = "unavailable"
+    training_status: Literal["unavailable"] = "unavailable"
     adapter_status: Literal["unavailable"] = "unavailable"
     simulator_online: bool = False

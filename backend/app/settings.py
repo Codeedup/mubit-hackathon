@@ -15,6 +15,7 @@ def _resolve_path(value: str) -> Path:
 
 DB_PATH = _resolve_path(os.getenv("ROBO_MEDIC_DB_PATH", "backend/robo_medic.sqlite3"))
 INCIDENT_DIR = _resolve_path(os.getenv("ROBO_MEDIC_INCIDENT_DIR", "data/incidents"))
+CAPTURED_KEYS_DIR = _resolve_path(os.getenv("ROBO_MEDIC_CAPTURED_KEYS_DIR", "data/evaluation/captured"))
 CORS_ORIGIN = os.getenv("ROBO_MEDIC_CORS_ORIGIN", "http://localhost:5173")
 SIMULATOR_URL = os.getenv("ROBO_MEDIC_SIMULATOR_URL", "http://127.0.0.1:8001").rstrip("/")
 PROVIDER_MODE = os.getenv("ROBO_MEDIC_PROVIDER", "unavailable")

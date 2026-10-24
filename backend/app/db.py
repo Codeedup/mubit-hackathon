@@ -119,10 +119,10 @@ def get_diagnosis(diagnosis_id: str) -> DiagnosisRecord | None:
 def list_diagnoses(incident_id: str | None = None) -> list[DiagnosisRecord]:
     with connection() as conn:
         if incident_id is None:
-            rows = conn.execute("SELECT * FROM diagnoses ORDER BY created_at DESC").fetchall()
+            rows = conn.execute("SELECT * FROM diagnoses ORDER BY created_at DESC, rowid DESC").fetchall()
         else:
             rows = conn.execute(
-                "SELECT * FROM diagnoses WHERE incident_id = ? ORDER BY created_at DESC",
+                "SELECT * FROM diagnoses WHERE incident_id = ? ORDER BY created_at DESC, rowid DESC",
                 (incident_id,),
             ).fetchall()
     return [_diagnosis_from_row(row) for row in rows]

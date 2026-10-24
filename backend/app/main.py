@@ -165,6 +165,8 @@ def metrics() -> Metrics:
         diagnosis_count=count_rows("diagnoses"),
         confirmation_count=count_rows("confirmations"),
         provider_status="local_fixture" if PROVIDER_MODE == "local_fixture" else "not_configured",
+        training_status="unavailable",
+        adapter_status="unavailable",
         simulator_online=live_monitor.online,
     )
 
