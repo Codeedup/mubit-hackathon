@@ -1,5 +1,6 @@
 """Local API with durable diagnosis, confirmation, and evaluation records."""
 
+import asyncio
 import sqlite3
 from contextlib import asynccontextmanager
 from uuid import uuid4
@@ -13,6 +14,7 @@ from .db import (
 )
 from .diagnosis import build_diagnosis
 from .incidents import IncidentFileError, get_incident, list_incidents
+from .live_monitor import live_monitor
 from .provider import (
     DiagnosisProvider, ProviderFailure, ProviderTimeout, ProviderUnavailable,
     configured_provider,
@@ -27,7 +29,15 @@ from .settings import CORS_ORIGIN, PROVIDER_MODE
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     initialize_database()
-    yield
+    monitor_task = asyncio.create_task(live_monitor.run())
+    try:
+        yield
+    finally:
+        monitor_task.cancel()
+        try:
+            await monitor_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(title="Robo Medic API", version="0.1.0", lifespan=lifespan)
@@ -155,5 +165,6 @@ def metrics() -> Metrics:
         diagnosis_count=count_rows("diagnoses"),
         confirmation_count=count_rows("confirmations"),
         provider_status="local_fixture" if PROVIDER_MODE == "local_fixture" else "not_configured",
+        simulator_online=live_monitor.online,
     )
 

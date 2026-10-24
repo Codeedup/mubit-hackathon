@@ -174,3 +174,4 @@ class Metrics(StrictModel):
     provider_status: Literal["not_configured", "local_fixture"]
     task_status: Literal["unavailable"] = "unavailable"
     adapter_status: Literal["unavailable"] = "unavailable"
+    simulator_online: bool = False

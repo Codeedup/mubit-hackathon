@@ -3,9 +3,8 @@
 Local diagnostic workflow for the Mubit Night Shift project. The backend can
 validate versioned incidents, save an immutable diagnosis and provider trace,
 record a technician outcome, show repair history, and report
-whether predictions matched verified causes. Live Mubit and Anthropic calls are
-not configured. The existing browser UI remains a baseline shell until its
-integration work.
+whether predictions matched inspected causes. Theo's simulator and browser UI
+are integrated through these backend contracts. Live Mubit calls are not configured.
 
 ## Run locally
 
@@ -28,12 +27,23 @@ npm install
 npm run dev
 ```
 
+To capture simulated faults, start the simulator in another terminal:
+
+```powershell
+python -m simulator.server --port 8001
+```
+
+Its control dashboard is at `http://localhost:8001`. The backend polls its
+telemetry and active faults, then writes validated version 1.0 incident files.
+The simulator is optional; existing incident files and API routes work while it
+is offline. Set `ROBO_MEDIC_SIMULATOR_URL` to change its local address.
+
 Open `http://localhost:5173`; API docs are at `http://localhost:8000/docs`.
 Vite proxies `/api` to port 8000. The default browser origin is
 `http://localhost:5173`.
 
 Copy `.env.example` to `.env` to override the database path, incident directory,
-CORS origin, or provider mode. `.env` and the local SQLite database are ignored
+CORS origin, provider mode, or simulator URL. `.env` and the local SQLite database are ignored
 by Git. Credentials must remain server-side; no external credentials are used
 by the current implementation.
 
@@ -64,6 +74,13 @@ never supplied to the diagnosis provider. These are public synthetic fixture
 keys, not private or physical inspection records. Do not tune task instructions
 against held-out results before the baseline run.
 
+Captured simulator incidents are also **synthetic**. Each reading uses the
+backend's `sensor`, `value`, `unit`, `origin`, and timezone-aware `time`
+fields. A metric is named in `sensor`, for example `n20_fl.rpm`; simulator
+packet defaults and ground-truth fault labels are not presented as measured
+readings or diagnosis evidence. The simulator's fault code is a diagnostic
+clue, and the provider's cause stays within the backend's label vocabulary.
+
 The diagnosis cause labels are `wheel obstruction`, `motor power/driver path`,
 `encoder/reporting fault`, and `unknown`. Evidence uses `{field, explanation}`;
 `field` must point to an existing top-level incident field, `fault_codes[n]`,
@@ -83,7 +100,7 @@ workflow are verified.
 | `POST` | `/api/confirm` | Save one technician-confirmed outcome per diagnosis without changing the prediction |
 | `GET` | `/api/repairs` | Repair history with cause, fix, inspection note, verification kind, and prediction match; can filter by `incident_id` |
 | `GET` | `/api/evaluation/confirmed` | Accuracy against inspected physical outcomes, grouped by provider and model |
-| `GET` | `/api/metrics` | Local counts and honest provider/task/adapter status |
+| `GET` | `/api/metrics` | Local counts, simulator intake status, and provider/task/adapter status |
 
 Example diagnosis request:
 
@@ -91,16 +108,16 @@ Example diagnosis request:
 {"incident_id":"DEV-001"}
 ```
 
-Use the returned diagnosis `id` in a confirmation after inspection:
+Use the returned diagnosis `id` to record a synthetic simulation outcome:
 
 ```json
 {
   "diagnosis_id": "<returned diagnosis id>",
   "incident_id": "DEV-001",
   "actual_cause": "wheel obstruction",
-  "fix_performed": "Removed the blockage and checked wheel rotation.",
-  "inspection_note": "Inspected the left wheel and found debris lodged beside the tyre.",
-  "verifier": "technician name",
+  "fix_performed": "Cleared the simulated blockage and checked wheel rotation.",
+  "inspection_note": "Simulator state showed a wheel jam and recovery after clearing it.",
+  "verifier": "simulator operator",
   "timestamp": "2026-10-24T12:00:00Z"
 }
 ```

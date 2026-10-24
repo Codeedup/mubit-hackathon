@@ -56,17 +56,18 @@ class LocalFixtureProvider:
 
     def diagnose(self, incident: Incident) -> ProviderResponse:
         signals = " ".join(incident.fault_codes).upper()
-        if "WHEEL_STALL" in signals or "OBSTRUCTION" in signals:
+        if ("WHEEL_STALL" in signals or "OBSTRUCTION" in signals
+                or ("SIM_N20_" in signals and ("_STALL" in signals or "_JAM" in signals))):
             cause = "wheel obstruction"
             alternative = "motor power/driver path"
             next_check = "With power isolated, inspect the wheel and drivetrain for a physical blockage."
             uncertainty = "medium"
-        elif "DRIVER" in signals or "UNDERVOLTAGE" in signals or "POWER" in signals:
+        elif any(token in signals for token in ("DRIVER", "UNDERVOLTAGE", "POWER", "OPEN_CIRCUIT", "BURNED_OUT", "DISCONNECTED", "RAIL_SAG")):
             cause = "motor power/driver path"
             alternative = "wheel obstruction"
             next_check = "With a safe test setup, inspect the driver supply and motor wiring."
             uncertainty = "medium"
-        elif "ENCODER" in signals or "REPORTING" in signals:
+        elif any(token in signals for token in ("ENCODER", "REPORTING", "ERR_ENC_")):
             cause = "encoder/reporting fault"
             alternative = "wheel obstruction"
             next_check = "Inspect encoder wiring and compare reported ticks with observed wheel movement."
