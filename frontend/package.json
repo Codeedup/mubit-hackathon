@@ -9,6 +9,9 @@
     "preview": "vite preview --host localhost"
   },
   "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -29,4 +32,3 @@
     "vite": "^6.2.0"
   }
 }
-
