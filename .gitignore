@@ -1,5 +1,7 @@
 .env
 data/collection/sent.local.jsonl
+data/collection/answer_keys.local.json
+data/evaluation/captured/
 .venv/
 __pycache__/
 *.py[cod]
@@ -9,5 +11,6 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/.env.local
 
 .playwright-mcp/

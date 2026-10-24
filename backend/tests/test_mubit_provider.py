@@ -4,15 +4,17 @@ import io
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
 
 from fastapi.testclient import TestClient
 
-from backend.app import db, incidents
+from backend.app import db, incidents, provider as provider_module
+from backend.app import collect
 from backend.app.main import app, provider_dependency
-from backend.app.provider import MubitProvider, TASK_INSTRUCTIONS, serialize_incident
+from backend.app.provider import MubitProvider, ProviderResponse, ProviderTimeout, TASK_INSTRUCTIONS, serialize_incident
 from backend.app.schemas import Incident
 
 
@@ -33,6 +35,52 @@ def answer(text: str) -> bytes:
 
 
 class MubitProviderTests(unittest.TestCase):
+    def test_missing_credentials_and_timeout_never_save_diagnosis(self):
+        with tempfile.TemporaryDirectory() as directory:
+            incident_dir = Path(directory) / "incidents"
+            incident_dir.mkdir()
+            (incident_dir / "DEV-001.json").write_bytes((ROOT / "data/incidents/DEV-001.json").read_bytes())
+            with patch.object(db, "DB_PATH", Path(directory) / "test.sqlite3"), \
+                 patch.object(incidents, "INCIDENT_DIR", incident_dir), \
+                 patch.object(provider_module, "PROVIDER_MODE", "mubit"), \
+                 patch.object(provider_module, "MUBIT_API_KEY", ""):
+                with TestClient(app) as client:
+                    self.assertEqual(client.post("/api/diagnose", json={"incident_id": "DEV-001"}).status_code, 503)
+                    app.dependency_overrides[provider_dependency] = lambda: MubitProvider(
+                        "test-key", "gemini-3.8-flash", "https://api.mubit.ai/gemini")
+                    try:
+                        with patch.object(MubitProvider, "diagnose", side_effect=ProviderTimeout()):
+                            self.assertEqual(client.post("/api/diagnose", json={"incident_id": "DEV-001"}).status_code, 504)
+                        self.assertEqual(client.get("/api/diagnoses").json(), [])
+                    finally:
+                        app.dependency_overrides.clear()
+
+    def test_collection_records_invalid_attempt_and_never_resends_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = Path(directory) / "sent.jsonl"
+            keys = Path(directory) / "keys.json"
+            with patch.object(collect, "LEDGER", ledger), patch.object(collect, "ANSWER_KEYS", keys), \
+                 patch.object(collect, "MUBIT_API_KEY", "test-key"), \
+                 patch.object(MubitProvider, "diagnose", return_value=ProviderResponse(
+                     "invalid label", "mreq_test", "gemini-3.8-flash", "mubit"
+                 )) as send, patch("sys.argv", ["collect", "--send", "--limit", "1", "--other-attempts", "0"]), \
+                 redirect_stdout(io.StringIO()):
+                collect.main()
+                rows = collect.read_ledger()
+                self.assertEqual([row["event"] for row in rows], ["attempt", "result"])
+                self.assertEqual(rows[1]["request_reference"], "mreq_test")
+                self.assertEqual(rows[1]["http_outcome"], 200)
+                self.assertIsNone(rows[1]["parsed_label"])
+                self.assertFalse(rows[1]["diagnosis_saved"])
+                self.assertNotIn("wheel obstruction", serialize_incident(send.call_args.args[0]))
+                self.assertEqual(json.loads(keys.read_text())["COLLECT-001"], "wheel obstruction")
+                collect.main()
+                self.assertEqual(send.call_args.args[0].id, "COLLECT-002")
+                with patch("sys.argv", ["collect", "--send", "--limit", "23", "--other-attempts", "2"]), \
+                     redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                    collect.main()
+                self.assertEqual(send.call_count, 2)
+
     def test_classifier_contract_and_saved_provenance(self):
         with tempfile.TemporaryDirectory() as directory:
             incident_dir = Path(directory) / "incidents"

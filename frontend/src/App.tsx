@@ -173,6 +173,7 @@ function Diagnostics({
   onSelectForFeedback: (diagId: string) => void
 }) {
   const [diagnosing, setDiagnosing] = useState(false)
+  const [diagnosisElapsed, setDiagnosisElapsed] = useState<{ id: string; seconds: number } | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const selected = incidents.status === 'ready'
@@ -193,8 +194,11 @@ function Diagnostics({
     if (!selected) return
     setDiagnosing(true)
     setActionError(null)
+    setDiagnosisElapsed(null)
+    const started = performance.now()
     try {
       const diagnosis = await api.diagnose(selected.id)
+      setDiagnosisElapsed({ id: diagnosis.id, seconds: (performance.now() - started) / 1000 })
       onDiagnosed(diagnosis)
       reloadAll()
     } catch (err) {
@@ -295,6 +299,11 @@ function Diagnostics({
                     <div><dt>Commanded action</dt><dd><code>{selected.commanded_action}</code></dd></div>
                     <div><dt>Fault codes</dt><dd>{selected.fault_codes.length ? selected.fault_codes.join(', ') : 'None supplied'}</dd></div>
                     <div><dt>Live symptom log</dt><dd>{selected.technician_note || 'None supplied'}</dd></div>
+                    <div><dt>Latest readings</dt><dd><ul className="readings-list">
+                      {Array.from(new Map(selected.readings.map((reading) => [reading.sensor, reading])).values()).map((reading) => (
+                        <li key={reading.sensor}><code>{reading.sensor}</code><strong>{String(reading.value)} {reading.unit}</strong></li>
+                      ))}
+                    </ul></dd></div>
                   </dl>
                   <TelemetryChart readings={selected.readings} />
                 </div>
@@ -317,7 +326,7 @@ function Diagnostics({
           </Card>
 
           {latestDiagnosis && (
-            <Card>
+            <Card className="diagnosis-card">
               <CardHeader>
                 <div>
                   <div className="eyebrow">DIAGNOSIS ADVISORY · {latestDiagnosis.model_id}</div>
@@ -325,7 +334,7 @@ function Diagnostics({
                   {latestDiagnosis.model_label && latestDiagnosis.model_label !== latestDiagnosis.diagnosis.cause_label &&
                     <small>Raw model label: {latestDiagnosis.model_label}; advisory downgraded because the readings lack a supporting clue.</small>}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <Badge>Uncertainty: {latestDiagnosis.diagnosis.uncertainty}</Badge>
                   {linkedConfirmation && <Badge>{linkedConfirmation.verification_kind === 'inspection' ? 'Inspected' : 'Simulation recorded'} by {linkedConfirmation.verifier}</Badge>}
                 </div>
@@ -344,10 +353,12 @@ function Diagnostics({
                     <div><dt>Alternative hypothesis</dt><dd>{latestDiagnosis.diagnosis.alternative}</dd></div>
                     <div><dt>Recommended next check</dt><dd><strong>{latestDiagnosis.diagnosis.next_check}</strong></dd></div>
                     <div><dt>Advisory source</dt><dd>{latestDiagnosis.advisory_source === 'application_rules' ? 'Application rules based on saved readings' : latestDiagnosis.advisory_source}</dd></div>
+                    <div><dt>Provider reply (saved verbatim)</dt><dd><code>{latestDiagnosis.raw_response}</code></dd></div>
                   </dl>
                 </div>
                 <div className="action-bar" style={{ padding: '14px 0 0', marginTop: 16 }}>
                   <span>Ref: {latestDiagnosis.request_reference}</span>
+                  {diagnosisElapsed?.id === latestDiagnosis.id && <span>Elapsed: {diagnosisElapsed.seconds.toFixed(2)} s</span>}
                   {linkedConfirmation ? (
                     <span style={{ color: '#0d9488', fontWeight: 700 }}>
                       <Check size={14} style={{ display: 'inline' }} /> Outcome recorded ({linkedConfirmation.fix_performed})
@@ -507,6 +518,7 @@ function Feedback({
               <Badge>{alreadyConfirmed ? 'Confirmed' : 'Open for review'}</Badge>
             </CardHeader>
             <CardContent>
+              <p style={{ fontSize: 12, color: '#547678', margin: '0 0 14px' }}>This outcome is saved in local repair history. It is not sent to Mubit or used to train an adapter.</p>
               <div style={{ marginBottom: 18, padding: 14, background: '#f8fafb', borderRadius: 8, border: '1px solid #e5ecef', fontSize: 12 }}>
                 <div style={{ color: '#627286', marginBottom: 4 }}>Original prediction ({currentDiag.model_id}):</div>
                 <strong>{currentDiag.diagnosis.cause_label}</strong>

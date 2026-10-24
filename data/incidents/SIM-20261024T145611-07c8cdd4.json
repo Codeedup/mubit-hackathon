@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "id": "SIM-20261024T145611-07c8cdd4",
+  "robot_type": "bot-01",
+  "time_window": "2026-10-24T14:56:11.080Z to 2026-10-24T14:56:11.628Z",
+  "commanded_action": "n20_fl target_rpm=150.0",
+  "readings": [
+    {
+      "sensor": "power.battery_v",
+      "value": 7.963,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "power.battery_current_a",
+      "value": 1.168,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "power.rail_5v_v",
+      "value": 4.975,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "n20_fl.rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "n20_fl.target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "n20_fl.pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "n20_fl.current_a",
+      "value": 0.997,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "n20_fl.temp_c",
+      "value": 25.7,
+      "unit": "degC",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.080000Z"
+    },
+    {
+      "sensor": "power.battery_v",
+      "value": 7.987,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "power.battery_current_a",
+      "value": 1.178,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "power.rail_5v_v",
+      "value": 4.994,
+      "unit": "V",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "n20_fl.rpm",
+      "value": 0.0,
+      "unit": "RPM",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "n20_fl.target_rpm",
+      "value": 150.0,
+      "unit": "RPM",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "n20_fl.pwm",
+      "value": 1.0,
+      "unit": "duty",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "n20_fl.current_a",
+      "value": 1.004,
+      "unit": "A",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    },
+    {
+      "sensor": "n20_fl.temp_c",
+      "value": 29.8,
+      "unit": "degC",
+      "origin": "synthetic",
+      "time": "2026-10-24T14:56:11.628000Z"
+    }
+  ],
+  "fault_codes": [],
+  "technician_note": "Synthetic telemetry captured for n20_fl; no physical inspection was performed.",
+  "source_type": "synthetic"
+}

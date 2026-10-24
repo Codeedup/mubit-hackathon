@@ -42,6 +42,9 @@ is offline. Set `ROBO_MEDIC_SIMULATOR_URL` to change its local address.
 Open `http://localhost:5173`; API docs are at `http://localhost:8000/docs`.
 Vite proxies `/api` to port 8000. The default browser origin is
 `http://localhost:5173`.
+For a separate local backend, set `ROBO_MEDIC_API_PROXY_TARGET=http://127.0.0.1:8002`
+in ignored `frontend/.env.local` before starting Vite. Check `/api/metrics` through the browser origin before
+the live demo so an older service on port 8000 cannot answer the request.
 
 Copy `.env.example` to `.env` to configure the backend. `.env` and the local
 SQLite database are ignored by Git. Keep credentials on the backend, never in
@@ -124,15 +127,24 @@ cases: ten each with obstruction clues, driver clues, reporting clues, and
 ambiguous observations. These are separate from the eight `HOLD-` cases and
 their answer keys. Collection uses the same serializer, model, instructions,
 provider call, and label parser as `POST /api/diagnose`. No Mubit calls occur
-without `--send`; `--limit` bounds a run, and a local ignored ledger prevents
-resending successful cases. Example after the live path and console are checked:
+without `--send`; `--limit` bounds a run. A local ignored ledger records each
+attempt before sending, so a timeout or crash cannot silently resend a case.
+The separate ignored answer-key file is never sent to Mubit. The ledger stores
+the input hash, timestamp, HTTP outcome, request reference, raw reply, parsed
+label, latency and save status. Review observations can be appended after
+checking the console. The agreed budget is 25 live calls, including the two
+earlier `DEV-001` calls. Use `--other-attempts` to count additional browser or
+API calls outside this CLI. Example after the live path and console are checked:
 
 ```powershell
-python -m backend.app.collect --send --limit 5
+python -m backend.app.collect
+python -m backend.app.collect --send --limit 1 --other-attempts 2
+python -m backend.app.collect --review-case COLLECT-001 --task-observed "Classify this robot fault" --reviewer-state queued
 ```
 
 Inspect Mubit Request/Reply and the task's kept-example count before sending
-more. The default first training point is 25 **kept examples**, not 25
+more. Pause collection if the call is grouped into another task, its reply is
+invalid, or review starts rejecting examples. The default first training point is 25 **kept examples**, not 25
 attempts; training must be enabled and a passing adapter is not guaranteed.
 The app's local confirmation records do not submit corrected training targets.
 Ask Mubit for its supported correction-ingestion mechanism before describing
