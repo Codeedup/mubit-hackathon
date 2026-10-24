@@ -1,16 +1,16 @@
-"""Provider boundary and an explicitly local, deterministic demo fixture.
-
-No external API behavior is assumed here. A Mubit adapter can implement the same
-protocol after its supported route and response fields are verified.
-"""
+"""Diagnosis providers, including Mubit's Gemini inference route."""
 
 import json
+import socket
 from dataclasses import dataclass
 from typing import Literal, Protocol
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from .schemas import Incident
-from .settings import PROVIDER_MODE
+from .settings import MUBIT_API_KEY, MUBIT_BASE_URL, MUBIT_MODEL, PROVIDER_MODE
 
 
 TASK_INSTRUCTIONS = """Diagnose only from the supplied incident JSON. Return one JSON object
@@ -49,6 +49,57 @@ class DiagnosisProvider(Protocol):
 class UnavailableProvider:
     def diagnose(self, incident: Incident) -> ProviderResponse:
         raise ProviderUnavailable("Diagnosis provider is not configured")
+
+
+class MubitProvider:
+    def __init__(self, api_key: str, model: str, base_url: str):
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url
+
+    def diagnose(self, incident: Incident) -> ProviderResponse:
+        payload = {
+            "systemInstruction": {"parts": [{"text": TASK_INSTRUCTIONS + " Return only valid JSON."}]},
+            "contents": [
+                {"role": "user", "parts": [{"text": incident.model_dump_json()}]},
+            ],
+            "generationConfig": {"responseMimeType": "application/json"},
+        }
+        request = Request(
+            f"{self.base_url}/v1beta/models/{quote(self.model, safe='-._')}:generateContent",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "x-goog-api-key": self.api_key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=60) as response:
+                request_reference = response.headers.get("x-middleware-request-id", "")
+                body = json.load(response)
+        except HTTPError as exc:
+            raise ProviderFailure(f"Mubit request failed (HTTP {exc.code})") from exc
+        except (TimeoutError, socket.timeout) as exc:
+            raise ProviderTimeout() from exc
+        except URLError as exc:
+            if isinstance(exc.reason, (TimeoutError, socket.timeout)):
+                raise ProviderTimeout() from exc
+            raise ProviderFailure("Could not reach Mubit") from exc
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise ProviderFailure("Mubit returned invalid JSON") from exc
+
+        if not request_reference:
+            raise ProviderFailure("Mubit response lacks a request ID")
+        try:
+            parts = body["candidates"][0]["content"]["parts"]
+            content = "".join(part["text"] for part in parts)
+            model_id = body.get("modelVersion") or self.model
+            if not content.strip() or not isinstance(model_id, str):
+                raise ValueError("Empty content or model")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise ProviderFailure("Mubit returned an incomplete diagnosis response") from exc
+        return ProviderResponse(content, request_reference, model_id, "mubit")
 
 
 class LocalFixtureProvider:
@@ -145,4 +196,8 @@ class LocalFixtureProvider:
 def configured_provider() -> DiagnosisProvider:
     if PROVIDER_MODE == "local_fixture":
         return LocalFixtureProvider()
+    if PROVIDER_MODE == "mubit":
+        if not MUBIT_API_KEY or not MUBIT_MODEL:
+            raise ProviderUnavailable("Set MUBIT_API_KEY and MUBIT_MODEL on the backend")
+        return MubitProvider(MUBIT_API_KEY, MUBIT_MODEL, MUBIT_BASE_URL)
     return UnavailableProvider()

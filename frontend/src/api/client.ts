@@ -77,10 +77,7 @@ export type Metrics = {
   incident_count: number
   diagnosis_count: number
   confirmation_count: number
-  provider_status: 'not_configured' | 'local_fixture'
-  task_status: 'unavailable'
-  training_status: 'unavailable'
-  adapter_status: 'unavailable'
+  provider_status: 'not_configured' | 'missing_credentials' | 'local_fixture' | 'mubit'
   simulator_online: boolean
 }
 

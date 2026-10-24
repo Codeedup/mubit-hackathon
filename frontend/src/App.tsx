@@ -157,6 +157,7 @@ function Diagnostics({
   liveBanner,
   dismissBanner,
   reloadAll,
+  onDiagnosed,
   onSelectForFeedback,
 }: {
   incidents: LoadState<Incident[]>
@@ -168,6 +169,7 @@ function Diagnostics({
   liveBanner: Incident | null
   dismissBanner: () => void
   reloadAll: () => void
+  onDiagnosed: (diagnosis: DiagnosisRecord) => void
   onSelectForFeedback: (diagId: string) => void
 }) {
   const [diagnosing, setDiagnosing] = useState(false)
@@ -192,7 +194,8 @@ function Diagnostics({
     setDiagnosing(true)
     setActionError(null)
     try {
-      await api.diagnose(selected.id)
+      const diagnosis = await api.diagnose(selected.id)
+      onDiagnosed(diagnosis)
       reloadAll()
     } catch (err) {
       setActionError(err instanceof Error ? err.message : String(err))
@@ -640,9 +643,7 @@ function Intelligence({
         <CardContent>
           <div className="status-list">
             <div><Database size={19} /><span><strong>Local SQLite store</strong><small>Diagnosis and outcome records persist across restarts.</small></span><Badge>{metrics.status === 'ready' ? 'Ready' : 'Pending'}</Badge></div>
-            <div><Activity size={19} /><span><strong>Diagnosis provider</strong><small>Configured provider and evidence validation.</small></span><Badge>{metrics.status === 'ready' ? metrics.data.provider_status : 'Pending'}</Badge></div>
-            <div><Sparkles size={19} /><span><strong>Mubit training</strong><small>No training job or confirmation submission is configured.</small></span><Badge>{metrics.status === 'ready' ? metrics.data.training_status : 'Pending'}</Badge></div>
-            <div><ShieldCheck size={19} /><span><strong>Mubit adapter</strong><small>No adapter ID, training result, or evaluation is available.</small></span><Badge>{metrics.status === 'ready' ? metrics.data.adapter_status : 'Pending'}</Badge></div>
+            <div><Activity size={19} /><span><strong>Diagnosis provider</strong><small>{metrics.status === 'ready' && metrics.data.provider_status === 'mubit' ? 'Mubit inference is configured. Request results appear in Diagnostics.' : 'Configure Mubit inference or use the local fixture.'}</small></span><Badge>{metrics.status === 'ready' ? metrics.data.provider_status : 'Pending'}</Badge></div>
             <div><Bot size={19} /><span><strong>Simulator intake</strong><small>Local synthetic telemetry from port 8001.</small></span><Badge>{metrics.status === 'ready' && metrics.data.simulator_online ? 'Online' : 'Offline'}</Badge></div>
           </div>
         </CardContent>
@@ -693,7 +694,10 @@ export default function App() {
       .then((data) => setMetrics({ status: 'ready', data }))
       .catch((error: unknown) => setMetrics({ status: 'error', message: String(error) }))
 
-    api.diagnoses().then(setDiagnoses).catch(() => {})
+    api.diagnoses().then((data) => setDiagnoses((current) => {
+      const byId = new Map([...current, ...data].map((record) => [record.id, record]))
+      return Array.from(byId.values()).sort((a, b) => b.created_at.localeCompare(a.created_at))
+    })).catch(() => {})
     api.repairs().then(setConfirmations).catch(() => {})
     api.confirmedEvaluation().then(setEvaluations).catch(() => {})
   }
@@ -732,7 +736,7 @@ export default function App() {
           <span>ROBO MEDIC <span className="topbar-slash">/</span> {current.label.toUpperCase()}</span>
           <div style={{ display: 'flex', gap: 8 }}>
             {simOnline && <Badge>LIVE STREAM (:8001)</Badge>}
-            <Badge>BACKEND PROVIDER</Badge>
+            <Badge>Provider: {metrics.status === 'ready' ? metrics.data.provider_status : 'connecting'}</Badge>
           </div>
         </header>
         <main>
@@ -761,6 +765,7 @@ export default function App() {
               liveBanner={liveBanner}
               dismissBanner={() => setLiveBanner(null)}
               reloadAll={reloadAll}
+              onDiagnosed={(diagnosis) => setDiagnoses((current) => [diagnosis, ...current.filter((item) => item.id !== diagnosis.id)])}
               onSelectForFeedback={(diagId) => {
                 setSelectedFeedbackDiagId(diagId)
                 setView('feedback')

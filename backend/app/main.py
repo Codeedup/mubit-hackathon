@@ -23,7 +23,7 @@ from .schemas import (
     ConfirmedEvaluationReport, ConfirmRequest, ConfirmationRecord, DiagnoseRequest,
     DiagnosisRecord, Incident, Metrics, RepairRecord,
 )
-from .settings import CORS_ORIGIN, PROVIDER_MODE
+from .settings import CORS_ORIGIN, MUBIT_API_KEY, MUBIT_MODEL, PROVIDER_MODE
 
 
 @asynccontextmanager
@@ -71,7 +71,10 @@ def incident(incident_id: str) -> Incident:
 
 
 def provider_dependency() -> DiagnosisProvider:
-    return configured_provider()
+    try:
+        return configured_provider()
+    except ProviderUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post("/api/diagnose", response_model=DiagnosisRecord, status_code=201)
@@ -160,13 +163,14 @@ def evaluation_confirmed() -> ConfirmedEvaluationReport:
 
 @app.get("/api/metrics", response_model=Metrics)
 def metrics() -> Metrics:
+    provider_status = PROVIDER_MODE if PROVIDER_MODE != "unavailable" else "not_configured"
+    if PROVIDER_MODE == "mubit" and (not MUBIT_API_KEY or not MUBIT_MODEL):
+        provider_status = "missing_credentials"
     return Metrics(
         incident_count=len(_incident_files_or_500()),
         diagnosis_count=count_rows("diagnoses"),
         confirmation_count=count_rows("confirmations"),
-        provider_status="local_fixture" if PROVIDER_MODE == "local_fixture" else "not_configured",
-        training_status="unavailable",
-        adapter_status="unavailable",
+        provider_status=provider_status,
         simulator_online=live_monitor.online,
     )
 

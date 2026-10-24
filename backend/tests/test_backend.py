@@ -89,8 +89,6 @@ class BackendSafetyTests(unittest.TestCase):
             self.assertEqual(len(client.get("/api/repairs").json()), 3)
             metrics = client.get("/api/metrics").json()
             self.assertEqual(metrics["confirmation_count"], 3)
-            self.assertEqual(metrics["training_status"], "unavailable")
-            self.assertEqual(metrics["adapter_status"], "unavailable")
             group = client.get("/api/evaluation/confirmed").json()["groups"][0]
             self.assertEqual((group["total"], group["confirmed_diagnosis_count"]), (1, 2))
             self.assertEqual((group["matched"], group["accuracy"]), (0, 0.0))

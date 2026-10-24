@@ -4,7 +4,8 @@ Local diagnostic workflow for the Mubit Night Shift project. The backend can
 validate versioned incidents, save an immutable diagnosis and provider trace,
 record a technician outcome, show repair history, and report
 whether predictions matched inspected causes. Theo's simulator and browser UI
-are integrated through these backend contracts. Live Mubit calls are not configured.
+are integrated through these backend contracts. Live diagnosis can run through
+Mubit's Gemini gateway when server-side credentials are configured.
 
 ## Run locally
 
@@ -42,10 +43,25 @@ Open `http://localhost:5173`; API docs are at `http://localhost:8000/docs`.
 Vite proxies `/api` to port 8000. The default browser origin is
 `http://localhost:5173`.
 
-Copy `.env.example` to `.env` to override the database path, incident directory,
-CORS origin, provider mode, simulator URL, or captured answer-key directory. `.env` and the local SQLite database are ignored
-by Git. Credentials must remain server-side; no external credentials are used
-by the current implementation.
+Copy `.env.example` to `.env` to configure the backend. `.env` and the local
+SQLite database are ignored by Git. Keep credentials on the backend, never in
+the frontend or browser.
+
+### Mubit diagnosis
+
+Set `ROBO_MEDIC_PROVIDER=mubit` and `MUBIT_API_KEY` in `.env`, then restart the
+backend. The default model is `gemini-3.8-flash`. Set `MUBIT_MODEL` if your
+workspace uses a different Gemini model, and set `MUBIT_BASE_URL` if the Mubit
+console gives your workspace a different Gemini base URL. The default is
+`https://api.mubit.ai/gemini`. For starter credit, choose a model listed in
+your Mubit console. Add any provider key in the Mubit console, if your chosen
+model is not covered by starter credit. The backend sends the incident JSON and stable task
+instructions to Mubit, validates the structured result and evidence references,
+and saves the model ID and Mubit request ID with the diagnosis. The browser
+shows the returned diagnosis when the call completes and refreshes saved records
+from the backend every 1.2 seconds. Mubit records request and answer content by
+default, so use synthetic incidents unless your workspace is approved to send
+physical incident data. See [Mubit's Gemini connection guide](https://docs.mubit.ai/guides/connect-gemini).
 
 ### Offline diagnosis fixture
 
@@ -92,9 +108,7 @@ The diagnosis cause labels are `wheel obstruction`, `motor power/driver path`,
 `field` must point to an existing top-level incident field, `fault_codes[n]`,
 or a property of `readings[n]`. A diagnosis also requires an alternative, next
 check, and low/medium/high uncertainty. The stable task instructions and
-provider boundary are in `backend/app/provider.py`. An external adapter can be
-added after the supported Mubit route, response identifiers, and feedback
-workflow are verified.
+provider boundary are in `backend/app/provider.py`.
 
 ## API flow
 
@@ -106,7 +120,7 @@ workflow are verified.
 | `POST` | `/api/confirm` | Save one technician-confirmed outcome per diagnosis without changing the prediction |
 | `GET` | `/api/repairs` | Repair history with cause, fix, inspection note, verification kind, and prediction match; can filter by `incident_id` |
 | `GET` | `/api/evaluation/confirmed` | Accuracy against inspected physical outcomes, grouped by provider and model |
-| `GET` | `/api/metrics` | Local counts, simulator intake status, and separate provider, task, Mubit training, and adapter status |
+| `GET` | `/api/metrics` | Local counts, simulator intake, and configured diagnosis provider status |
 
 Example diagnosis request:
 
@@ -152,9 +166,9 @@ recent confirmed diagnosis for each incident contributes one case to accuracy;
 no accuracy value. This is diagnostic accuracy against verified causes.
 
 Technician confirmations remain local repair history. They are ground truth for
-the inspected-case evaluation above; saving one does not submit a correction,
-start training, or establish an adapter. `/api/metrics` reports Mubit training
-and adapter status as `unavailable` because neither integration exists yet.
+the inspected-case evaluation above; saving one does not submit a correction
+or start Mubit training. Task and adapter progress can be viewed in the Mubit
+console; this app does not read those statuses.
 
 Synthetic answer-key evaluation is a separate offline command. It scores the
 first stored diagnosis for each case across providers, before any later saved
@@ -185,12 +199,8 @@ python -m unittest discover -s backend/tests -v
 ```
 
 The frontend supports diagnosis, technician outcome logging, repair history,
-and inspected-case evaluation. It displays Mubit training and adapter status
-separately from local outcome counts. The local fixture is for software flow
-checks;
-its predictions are not evidence of model performance. There is no live Mubit
-diagnosis, correction submission, task status, adapter training, or adapter
-evaluation. The API currently has no authentication and is intended for local
-use. Repair history is stored locally in SQLite and is not adapter
-learning. A future similar-case retrieval feature would be application memory,
-not proof that an adapter learned from confirmations.
+and inspected-case evaluation. The local fixture is for software flow checks;
+its predictions are not evidence of model performance. There is no Mubit
+correction submission or adapter management in this app. The API currently has
+no authentication and is intended for local use. Repair history is stored
+locally in SQLite and is not adapter learning.
