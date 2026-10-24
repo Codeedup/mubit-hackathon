@@ -320,8 +320,10 @@ function Diagnostics({
             <Card>
               <CardHeader>
                 <div>
-                  <div className="eyebrow">STRUCTURED DIAGNOSIS · {latestDiagnosis.model_id}</div>
+                  <div className="eyebrow">DIAGNOSIS ADVISORY · {latestDiagnosis.model_id}</div>
                   <h2>{latestDiagnosis.diagnosis.cause_label}</h2>
+                  {latestDiagnosis.model_label && latestDiagnosis.model_label !== latestDiagnosis.diagnosis.cause_label &&
+                    <small>Raw model label: {latestDiagnosis.model_label}; advisory downgraded because the readings lack a supporting clue.</small>}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <Badge>Uncertainty: {latestDiagnosis.diagnosis.uncertainty}</Badge>
@@ -332,7 +334,7 @@ function Diagnostics({
                 <div className="incident-detail" style={{ padding: 0 }}>
                   <dl>
                     <div>
-                      <dt>Supporting evidence</dt>
+                      <dt>Supporting evidence{latestDiagnosis.advisory_source === 'application_rules' ? ' (application rules)' : ''}</dt>
                       <dd>
                         <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>
                           {latestDiagnosis.diagnosis.supporting_evidence.map((ev, i) => <li key={i}><code>{ev.field}</code>: {ev.explanation}</li>)}
@@ -340,7 +342,8 @@ function Diagnostics({
                       </dd>
                     </div>
                     <div><dt>Alternative hypothesis</dt><dd>{latestDiagnosis.diagnosis.alternative}</dd></div>
-                    <div><dt>Recommended check / fix</dt><dd><strong>{latestDiagnosis.diagnosis.next_check}</strong></dd></div>
+                    <div><dt>Recommended next check</dt><dd><strong>{latestDiagnosis.diagnosis.next_check}</strong></dd></div>
+                    <div><dt>Advisory source</dt><dd>{latestDiagnosis.advisory_source === 'application_rules' ? 'Application rules based on saved readings' : latestDiagnosis.advisory_source}</dd></div>
                   </dl>
                 </div>
                 <div className="action-bar" style={{ padding: '14px 0 0', marginTop: 16 }}>

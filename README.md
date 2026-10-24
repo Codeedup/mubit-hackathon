@@ -55,9 +55,13 @@ workspace uses a different Gemini model, and set `MUBIT_BASE_URL` if the Mubit
 console gives your workspace a different Gemini base URL. The default is
 `https://api.mubit.ai/gemini`. For starter credit, choose a model listed in
 your Mubit console. Add any provider key in the Mubit console, if your chosen
-model is not covered by starter credit. The backend sends the incident JSON and stable task
-instructions to Mubit, validates the structured result and evidence references,
-and saves the model ID and Mubit request ID with the diagnosis. The browser
+model is not covered by starter credit. The backend sends a compact, label-free
+case description and fixed classification instructions to Mubit. It accepts
+exactly one of the four cause labels. Application rules then build the evidence,
+alternative, next check, and uncertainty from the saved incident. If a model
+label lacks a supporting reading, the advisory becomes `unknown` while the raw
+`model_label` remains available. The diagnosis stores the model ID, raw reply,
+request ID, and advisory source. The browser
 shows the returned diagnosis when the call completes and refreshes saved records
 from the backend every 1.2 seconds. Mubit records request and answer content by
 default, so use synthetic incidents unless your workspace is approved to send
@@ -108,14 +112,38 @@ The diagnosis cause labels are `wheel obstruction`, `motor power/driver path`,
 `field` must point to an existing top-level incident field, `fault_codes[n]`,
 or a property of `readings[n]`. A diagnosis also requires an alternative, next
 check, and low/medium/high uncertainty. The stable task instructions and
-provider boundary are in `backend/app/provider.py`.
+provider boundary are in `backend/app/provider.py`. Mubit failures return a
+safe error with the request ID when available. Structured server logs retain
+status, response shape, finish reason, and a bounded raw response excerpt for
+synthetic cases; failed calls never create diagnosis records.
+
+### Adapter collection preparation
+
+`python -m backend.app.collect` previews 40 distinct synthetic, label-free
+cases: ten each with obstruction clues, driver clues, reporting clues, and
+ambiguous observations. These are separate from the eight `HOLD-` cases and
+their answer keys. Collection uses the same serializer, model, instructions,
+provider call, and label parser as `POST /api/diagnose`. No Mubit calls occur
+without `--send`; `--limit` bounds a run, and a local ignored ledger prevents
+resending successful cases. Example after the live path and console are checked:
+
+```powershell
+python -m backend.app.collect --send --limit 5
+```
+
+Inspect Mubit Request/Reply and the task's kept-example count before sending
+more. The default first training point is 25 **kept examples**, not 25
+attempts; training must be enabled and a passing adapter is not guaranteed.
+The app's local confirmation records do not submit corrected training targets.
+Ask Mubit for its supported correction-ingestion mechanism before describing
+a technician correction as an adapter update.
 
 ## API flow
 
 | Method | Path | Behavior |
 | --- | --- | --- |
 | `GET` | `/api/incidents`, `/api/incidents/{id}` | Validated incident files |
-| `POST` | `/api/diagnose` | Diagnose by incident ID; save incident snapshot, structured result, raw response, model ID, and request reference |
+| `POST` | `/api/diagnose` | Classify by incident ID; save incident snapshot, raw model label, application advisory, model ID, and request reference |
 | `GET` | `/api/diagnoses`, `/api/diagnoses/{id}` | Retrieve saved predictions; list can filter by `incident_id` |
 | `POST` | `/api/confirm` | Save one technician-confirmed outcome per diagnosis without changing the prediction |
 | `GET` | `/api/repairs` | Repair history with cause, fix, inspection note, verification kind, and prediction match; can filter by `incident_id` |

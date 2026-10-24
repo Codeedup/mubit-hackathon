@@ -1,6 +1,8 @@
 """Local API with durable diagnosis, confirmation, and evaluation records."""
 
 import asyncio
+import json
+import logging
 import sqlite3
 from contextlib import asynccontextmanager
 from uuid import uuid4
@@ -95,7 +97,12 @@ def diagnose(
     except ProviderTimeout as exc:
         raise HTTPException(status_code=504, detail="Diagnosis provider timed out") from exc
     except ProviderFailure as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        logging.getLogger(__name__).error("Diagnosis provider failure: %s", json.dumps({
+            "incident_id": selected.id, "reason": str(exc),
+            "request_reference": exc.request_reference, **exc.trace,
+        }, default=str))
+        reference = f" (request {exc.request_reference})" if exc.request_reference else ""
+        raise HTTPException(status_code=502, detail=f"{exc}{reference}") from exc
     save_diagnosis(record)
     return record
 

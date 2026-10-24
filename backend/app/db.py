@@ -38,7 +38,9 @@ def initialize_database() -> None:
                 model_id TEXT,
                 incident_json TEXT,
                 raw_response TEXT,
-                provider_kind TEXT
+                provider_kind TEXT,
+                model_label TEXT,
+                advisory_source TEXT
             );
             CREATE TABLE IF NOT EXISTS confirmations (
                 id TEXT PRIMARY KEY,
@@ -62,7 +64,8 @@ def initialize_database() -> None:
         # Preserve an existing skeleton database when this contract is introduced.
         for table, additions in {
             "diagnoses": {
-                "incident_json": "TEXT", "raw_response": "TEXT", "provider_kind": "TEXT"
+                "incident_json": "TEXT", "raw_response": "TEXT", "provider_kind": "TEXT",
+                "model_label": "TEXT", "advisory_source": "TEXT"
             },
             "confirmations": {"inspection_note": "TEXT", "verification_kind": "TEXT"},
         }.items():
@@ -92,6 +95,10 @@ def save_diagnosis(record: DiagnosisRecord) -> None:
                 record.incident.model_dump_json(), record.raw_response, record.provider_kind,
             ),
         )
+        conn.execute(
+            "UPDATE diagnoses SET model_label = ?, advisory_source = ? WHERE id = ?",
+            (record.model_label, record.advisory_source, record.id),
+        )
 
 
 def _diagnosis_from_row(row: sqlite3.Row) -> DiagnosisRecord:
@@ -107,6 +114,8 @@ def _diagnosis_from_row(row: sqlite3.Row) -> DiagnosisRecord:
         "model_id": row["model_id"],
         "provider_kind": row["provider_kind"],
         "raw_response": row["raw_response"],
+        "model_label": row["model_label"],
+        "advisory_source": row["advisory_source"] or "legacy_provider",
     })
 
 
