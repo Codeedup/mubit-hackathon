@@ -34,6 +34,8 @@ export type DiagnosisRecord = {
   model_id: string
   provider_kind: 'local_fixture' | 'mubit'
   raw_response: string
+  model_label: Diagnosis['cause_label'] | null
+  advisory_source: 'application_rules' | 'local_fixture' | 'legacy_provider'
 }
 export type ConfirmRequest = {
   diagnosis_id: string

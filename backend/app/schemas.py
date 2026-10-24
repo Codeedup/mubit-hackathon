@@ -124,6 +124,8 @@ class DiagnosisRecord(StrictModel):
     model_id: str
     provider_kind: ProviderKind
     raw_response: str
+    model_label: CauseLabel | None = None
+    advisory_source: Literal["application_rules", "local_fixture", "legacy_provider"] = "legacy_provider"
 
 
 class ConfirmRequest(StrictModel):

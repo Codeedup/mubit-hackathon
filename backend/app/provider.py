@@ -1,6 +1,7 @@
 """Diagnosis providers, including Mubit's Gemini inference route."""
 
 import json
+import logging
 import socket
 from dataclasses import dataclass
 from typing import Literal, Protocol
@@ -13,14 +14,31 @@ from .schemas import Incident
 from .settings import MUBIT_API_KEY, MUBIT_BASE_URL, MUBIT_MODEL, PROVIDER_MODE
 
 
-TASK_INSTRUCTIONS = """Diagnose only from the supplied incident JSON. Return one JSON object
-with cause_label, supporting_evidence [{field, explanation}], alternative,
-next_check, and uncertainty. Set uncertainty to exactly one of low, medium, or
-high, with no explanation in that field. The cause_label must be wheel obstruction,
-motor power/driver path, encoder/reporting fault, or unknown.
-Every evidence field must identify an existing incident field. Do not invent
-measurements or imply that a next check has been performed. If the cause is
-unclear, use unknown and request a useful inspection or measurement."""
+TASK_INSTRUCTIONS = (
+    "Classify this robot fault report using only the supplied observations. "
+    "Reply with exactly one label: wheel obstruction; motor power/driver path; "
+    "encoder/reporting fault; unknown. If the observations do not distinguish "
+    "a cause, reply unknown. Do not infer measurements or repairs."
+)
+
+
+def serialize_incident(incident: Incident) -> str:
+    """One label-free case representation for app, collection, and evaluation."""
+    lines = [
+        f"Robot: {incident.robot_type}",
+        f"Window: {incident.time_window}",
+        f"Commanded action: {incident.commanded_action}",
+    ]
+    for index, reading in enumerate(incident.readings):
+        lines.append(
+            f"Reading {index}: {reading.time.isoformat()} | {reading.sensor} = "
+            f"{reading.value} {reading.unit} | origin={reading.origin}"
+        )
+    # Simulator codes can contain injected ground-truth labels.
+    if incident.source_type != "synthetic" and incident.fault_codes:
+        lines.append("Fault codes: " + ", ".join(incident.fault_codes))
+    lines.append(f"Technician note: {incident.technician_note}")
+    return "\n".join(lines)
 
 
 class ProviderUnavailable(Exception):
@@ -28,7 +46,10 @@ class ProviderUnavailable(Exception):
 
 
 class ProviderFailure(Exception):
-    pass
+    def __init__(self, message: str, request_reference: str = "", trace: dict | None = None):
+        super().__init__(message)
+        self.request_reference = request_reference
+        self.trace = trace or {}
 
 
 class ProviderTimeout(Exception):
@@ -60,11 +81,10 @@ class MubitProvider:
 
     def diagnose(self, incident: Incident) -> ProviderResponse:
         payload = {
-            "systemInstruction": {"parts": [{"text": TASK_INSTRUCTIONS + " Return only valid JSON."}]},
+            "systemInstruction": {"parts": [{"text": TASK_INSTRUCTIONS}]},
             "contents": [
-                {"role": "user", "parts": [{"text": incident.model_dump_json()}]},
+                {"role": "user", "parts": [{"text": serialize_incident(incident)}]},
             ],
-            "generationConfig": {"responseMimeType": "application/json"},
         }
         request = Request(
             f"{self.base_url}/v1beta/models/{quote(self.model, safe='-._')}:generateContent",
@@ -75,32 +95,69 @@ class MubitProvider:
             },
             method="POST",
         )
+        request_reference = ""
+        body_bytes = b""
+        status = None
         try:
             with urlopen(request, timeout=60) as response:
                 request_reference = response.headers.get("x-middleware-request-id", "")
-                body = json.load(response)
+                status = getattr(response, "status", 200)
+                body_bytes = response.read()
         except HTTPError as exc:
-            raise ProviderFailure(f"Mubit request failed (HTTP {exc.code})") from exc
+            request_reference = exc.headers.get("x-middleware-request-id", "") if exc.headers else ""
+            body_bytes = exc.read()
+            trace = self._trace(body_bytes, exc.code, request_reference, incident)
+            raise ProviderFailure(f"Mubit request failed (HTTP {exc.code})", request_reference, trace) from exc
         except (TimeoutError, socket.timeout) as exc:
             raise ProviderTimeout() from exc
         except URLError as exc:
             if isinstance(exc.reason, (TimeoutError, socket.timeout)):
                 raise ProviderTimeout() from exc
             raise ProviderFailure("Could not reach Mubit") from exc
+        trace = self._trace(body_bytes, status, request_reference, incident)
+        try:
+            body = json.loads(body_bytes)
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-            raise ProviderFailure("Mubit returned invalid JSON") from exc
-
-        if not request_reference:
-            raise ProviderFailure("Mubit response lacks a request ID")
+            raise ProviderFailure("Mubit returned invalid JSON", request_reference, trace) from exc
+        trace.update(self._shape(body))
         try:
             parts = body["candidates"][0]["content"]["parts"]
-            content = "".join(part["text"] for part in parts)
+            content = "".join(part.get("text", "") for part in parts if isinstance(part, dict))
             model_id = body.get("modelVersion") or self.model
             if not content.strip() or not isinstance(model_id, str):
                 raise ValueError("Empty content or model")
         except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise ProviderFailure("Mubit returned an incomplete diagnosis response") from exc
+            raise ProviderFailure("Mubit returned no usable label text", request_reference, trace) from exc
+        trace["extracted_text_length"] = len(content)
+        if not request_reference:
+            raise ProviderFailure("Mubit response lacks a request ID", "", trace)
+        logging.getLogger(__name__).info("Mubit response: %s", json.dumps({
+            key: value for key, value in trace.items() if key != "synthetic_body_excerpt"
+        }, default=str))
         return ProviderResponse(content, request_reference, model_id, "mubit")
+
+    @staticmethod
+    def _shape(body: object) -> dict:
+        if not isinstance(body, dict):
+            return {"body_type": type(body).__name__}
+        candidates = body.get("candidates")
+        first = candidates[0] if isinstance(candidates, list) and candidates else {}
+        return {
+            "body_keys": sorted(body),
+            "candidate_count": len(candidates) if isinstance(candidates, list) else None,
+            "finish_reason": first.get("finishReason") if isinstance(first, dict) else None,
+            "prompt_feedback": body.get("promptFeedback"),
+            "model_version": body.get("modelVersion"),
+        }
+
+    @classmethod
+    def _trace(cls, body_bytes: bytes, status: int | None, request_id: str, incident: Incident) -> dict:
+        trace = {"http_status": status, "request_reference": request_id,
+                 "body_length": len(body_bytes)}
+        if incident.source_type == "synthetic":
+            # Bounded response excerpt helps debug malformed gateway replies.
+            trace["synthetic_body_excerpt"] = body_bytes[:512].decode("utf-8", errors="replace")
+        return trace
 
 
 class LocalFixtureProvider:

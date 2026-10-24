@@ -1,4 +1,5 @@
 .env
+data/collection/sent.local.jsonl
 .venv/
 __pycache__/
 *.py[cod]
@@ -9,3 +10,4 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+.playwright-mcp/
