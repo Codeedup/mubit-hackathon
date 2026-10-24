@@ -93,6 +93,16 @@ class Diagnosis(StrictModel):
     next_check: str = Field(min_length=1)
     uncertainty: Literal["low", "medium", "high"]
 
+    @field_validator("uncertainty", mode="before")
+    @classmethod
+    def normalize_uncertainty(cls, value: object) -> object:
+        if isinstance(value, str):
+            level = value.strip().lower().split(";", 1)[0].strip().rstrip(".")
+            if level == "moderate":
+                return "medium"
+            return level
+        return value
+
     @model_validator(mode="after")
     def unknown_is_uncertain(self) -> "Diagnosis":
         if self.cause_label == "unknown" and self.uncertainty != "high":

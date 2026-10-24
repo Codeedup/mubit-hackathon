@@ -15,7 +15,8 @@ from .settings import MUBIT_API_KEY, MUBIT_BASE_URL, MUBIT_MODEL, PROVIDER_MODE
 
 TASK_INSTRUCTIONS = """Diagnose only from the supplied incident JSON. Return one JSON object
 with cause_label, supporting_evidence [{field, explanation}], alternative,
-next_check, and uncertainty. The cause_label must be wheel obstruction,
+next_check, and uncertainty. Set uncertainty to exactly one of low, medium, or
+high, with no explanation in that field. The cause_label must be wheel obstruction,
 motor power/driver path, encoder/reporting fault, or unknown.
 Every evidence field must identify an existing incident field. Do not invent
 measurements or imply that a next check has been performed. If the cause is
