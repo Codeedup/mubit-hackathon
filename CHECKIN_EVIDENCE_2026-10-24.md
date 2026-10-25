@@ -1,5 +1,9 @@
 # Robo Medic check-in evidence — 24 October 2026
 
+> Historical observations from 24 October. The collection-send suggestions
+> below are archived and are not part of the submission demo. Current launch
+> steps and adapter status are in [README.md](README.md).
+
 ## Revision and checks
 
 - Fetched and fast-forwarded local `main` to `7a37b735629e5eb22e1c03b19ce2723cf7d2c619`, matching `origin/main` at check time. This revision already integrates the simulator, Mubit provider, API routes, browser flow and collection CLI.

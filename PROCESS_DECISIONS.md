@@ -1,4 +1,9 @@
-# Robo Medic: process decisions for the current skeleton
+# Robo Medic: archived skeleton decision checklist
+
+> Historical planning document from before the working backend and frontend.
+> Its statements that diagnosis always returns 503, that data directories are
+> empty, and that there are no tests describe an older revision. See
+> [README.md](README.md) for the submission behavior.
 
 This is a decision checklist for the team, based on the code in this repository. **Open** means the behavior has not been agreed or implemented; a suggested default is a proposal, not a description of the current system. Resolve the decisions in dependency order before treating the workspace as a working diagnostic tool.
 

@@ -1,246 +1,141 @@
 # Robo Medic
 
-Local diagnostic workflow for the Mubit Night Shift project. The backend can
-validate versioned incidents, save an immutable diagnosis and provider trace,
-record a technician outcome, show repair history, and report
-whether predictions matched inspected causes. Theo's simulator and browser UI
-are integrated through these backend contracts. Live diagnosis can run through
-Mubit's Gemini gateway when server-side credentials are configured.
+Robo Medic is a local technician workflow for **synthetic robot faults**. The
+four-motor simulator supplies telemetry. The backend validates an incident,
+asks the configured classifier for one fault label, builds an advisory from
+the readings, and stores the result. A technician can record a simulated
+outcome locally without changing the original prediction.
+
+```text
+Simulator or bundled synthetic case
+  -> validated data/incidents/*.json
+  -> Mubit one-label inference OR explicit offline rule fixture
+  -> application evidence, uncertainty, and next check
+  -> local outcome and evaluation
+```
+
+The diagnosis is advice only. It issues no simulator control command. This
+submission does not include a physical-board intake.
+
+## Submission status
+
+| Status | What can be shown |
+| --- | --- |
+| Implemented | Version 1.0 incidents, simulator capture, diagnosis persistence and provenance, technician outcomes, local evaluation, and the bench/ledger UI. |
+| Demonstrated earlier | A synthetic `SIM-*` jam received `wheel obstruction` through Mubit on 24 October 2026, request `mreq_01a16e6bc1237061858cb325aebe68bc`, model `gemini-3.8-flash`. The reply and outcome were saved in a local SQLite database; that database is not part of a fresh clone. See [the check-in record](CHECKIN_EVIDENCE_2026-10-24.md). |
+| Demonstrable offline | The same API and UI workflow runs with `ROBO_MEDIC_PROVIDER=local_fixture`. This deterministic rule fixture is neither Mubit nor an LLM. |
+| Unavailable | No adapter was produced and no adapter improvement was measured. The team reports that Mubit staff said overloaded servers prevented adaptation during the event; no written staff statement or exact communication time is in this repository. The last documented console check on 24 October showed zero kept examples for the intended task, not a current count. |
+| Planned, outside this submission | Adapter comparison if Mubit makes one available. Local confirmations are not sent as training feedback. |
+
+A saved Mubit `mreq_` ID proves a routed inference response reached the backend.
+It does not prove that the console retained its request/reply text, kept an
+example, or trained an adapter. `/api/metrics.provider_status=mubit` means the
+provider is **configured**; it is not a health check.
 
 ## Run locally
 
-Requires Node.js 22+ and Python 3.10+.
-
-From the repository root, start the backend:
+Requires Python 3.10+ and Node.js 22+. Run commands from the repository root
+unless a step changes directory. The default provider is `unavailable`, so
+choose a mode explicitly in `.env`.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
-uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+Copy-Item .env.example .env
+```
+
+For the repeatable offline demo, set `ROBO_MEDIC_PROVIDER=local_fixture` in
+`.env`. Start the API:
+
+```powershell
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal, start the frontend:
 
 ```powershell
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-To capture simulated faults, start the simulator in another terminal:
+Open `http://localhost:5173`. Vite proxies `/api` to `127.0.0.1:8000` by
+default. Check `http://localhost:5173/api/metrics` before the demo to ensure
+the browser reaches the intended backend and incident directory. If port 8000
+is already used, set `ROBO_MEDIC_API_PROXY_TARGET=http://127.0.0.1:<port>` in
+ignored `frontend/.env.local` and start the API on the same port. Use one
+backend process and one SQLite path. `ROBO_MEDIC_DB_PATH` and
+`ROBO_MEDIC_INCIDENT_DIR` can be set in `.env`; relative paths resolve from the
+repository root.
+
+The bundled `DEV-*` and `HOLD-*` incidents are synthetic and work with the
+simulator off. For a new synthetic capture, start the optional simulator in a
+third terminal:
 
 ```powershell
 python -m simulator.server --host 127.0.0.1 --port 8001
 ```
 
-Its control dashboard is at `http://localhost:8001`. The backend polls its
-telemetry and active faults, then writes validated version 1.0 incident files.
-The simulator is optional; existing incident files and API routes work while it
-is offline. Set `ROBO_MEDIC_SIMULATOR_URL` to change its local address.
+Open `http://localhost:8001`, inject a fault, and watch for a `SIM-*` case in
+the bench queue. The simulator uses four virtual motors; its readings are
+labelled `synthetic`. Injected fault labels are stored separately from the
+incident input. The simulator is optional for inspecting stored cases.
 
-Open `http://localhost:5173`; API docs are at `http://localhost:8000/docs`.
-Vite proxies `/api` to port 8000. The default browser origin is
-`http://localhost:5173`.
-For a separate local backend, set `ROBO_MEDIC_API_PROXY_TARGET=http://127.0.0.1:8002`
-in ignored `frontend/.env.local` before starting Vite. Check `/api/metrics` through the browser origin before
-the live demo so an older service on port 8000 cannot answer the request.
+### Provider modes
 
-Copy `.env.example` to `.env` to configure the backend. `.env` and the local
-SQLite database are ignored by Git. Keep credentials on the backend, never in
-the frontend or browser.
+| `.env` value | Behavior |
+| --- | --- |
+| `ROBO_MEDIC_PROVIDER=local_fixture` | Explicit offline rule fixture. Records use `provider_kind=local_fixture`, a `local-fixture:` reference, and a fixture model ID. |
+| `ROBO_MEDIC_PROVIDER=mubit` | Live Mubit inference using server-side `MUBIT_API_KEY`, `MUBIT_MODEL`, and `MUBIT_BASE_URL`. Only use after a separate live rehearsal; gateway availability is not established by this submission. |
+| `ROBO_MEDIC_PROVIDER=unavailable` | Diagnosis returns 503; stored incidents, diagnoses, and outcomes remain readable. |
 
-### Mubit diagnosis
+The Mubit provider in [provider.py](backend/app/provider.py) sends fixed
+instructions and a label-free incident description, then accepts exactly one
+of `wheel obstruction`, `motor power/driver path`, `encoder/reporting fault`,
+or `unknown`. Application rules select evidence and a next check; an
+unsupported model label is downgraded to `unknown` while its raw reply remains
+stored. Timeouts and provider errors appear on screen and do not silently
+switch to the fixture. Keep `.env`, keys, local SQLite, and logs out of Git.
 
-Set `ROBO_MEDIC_PROVIDER=mubit` and `MUBIT_API_KEY` in `.env`, then restart the
-backend. The default model is `gemini-3.8-flash`. Set `MUBIT_MODEL` if your
-workspace uses a different Gemini model, and set `MUBIT_BASE_URL` if the Mubit
-console gives your workspace a different Gemini base URL. The default is
-`https://api.mubit.ai/gemini`. For starter credit, choose a model listed in
-your Mubit console. Add any provider key in the Mubit console, if your chosen
-model is not covered by starter credit. The backend sends a compact, label-free
-case description and fixed classification instructions to Mubit. It accepts
-exactly one of the four cause labels. Application rules then build the evidence,
-alternative, next check, and uncertainty from the saved incident. If a model
-label lacks a supporting reading, the advisory becomes `unknown` while the raw
-`model_label` remains available. The diagnosis stores the model ID, raw reply,
-request ID, and advisory source. The browser
-shows the returned diagnosis when the call completes and refreshes saved records
-from the backend every 1.2 seconds. Mubit records request and answer content by
-default, so use synthetic incidents unless your workspace is approved to send
-physical incident data. See [Mubit's Gemini connection guide](https://docs.mubit.ai/guides/connect-gemini).
+## Data and evaluation
 
-### Offline diagnosis fixture
+Every incident has an ID, source label, time window, action, note, fault codes,
+and readings with sensor, value, unit, origin, and timezone-aware timestamp.
+The loader rejects malformed files and duplicate IDs. Diagnoses store an
+immutable incident snapshot, provider kind, model ID, raw reply, request ID,
+and advisory. `POST /api/confirm` stores one outcome per diagnosis without
+editing that prediction. The API is local-only and has no authentication.
 
-`ROBO_MEDIC_PROVIDER=unavailable` is the default. Diagnosis requests return 503
-in that mode. To exercise the complete API flow without keys, set
-`ROBO_MEDIC_PROVIDER=local_fixture` in `.env` and restart the backend. This is a
-deterministic rule-based fixture, not a model or Mubit request. Its records carry
-`provider_kind=local_fixture`, `model_id=local-rule-fixture-v1`, and a
-`local-fixture:` request reference. Task, training, and adapter status remain unavailable.
+The browser's Learning Loop counts **saved local** Mubit diagnoses and
+outcomes. It cannot query Mubit's kept-example count. The checked-in
+`backend.app.collect` tool and its attempt-before-send ledger remain available
+as historical work, but the prepared 40 cases are not part of this demo and
+must not be sent while adaptation is unavailable.
 
-## Data contract and provenance
-
-Each `data/incidents/*.json` file is one immutable version 1.0 incident with
-`schema_version`, `id`, `robot_type`, `time_window`, `commanded_action`,
-`readings`, `fault_codes`, `technician_note`, and `source_type`. Every reading
-requires `sensor`, `value`, `unit`, `origin`, and a time with a timezone offset.
-The loader rejects malformed files and duplicate IDs; it does not ask a model
-to repair input. To revise a diagnosed case, create a new incident ID. Each
-stored diagnosis includes a snapshot of the incident as it existed when run.
-
-The 11 bundled cases are **synthetic**, including all their readings and notes.
-Three are development examples; eight IDs beginning `HOLD-` are reserved for
-held-out evaluation. Their answer keys are in
-`data/evaluation/answer_keys.synthetic.json`, separate from incident files and
-never supplied to the diagnosis provider. These are public synthetic fixture
-keys, not private or physical inspection records. The incident files contain
-observable readings and symptom notes, but no injected fault labels or
-cause-specific fault codes. Do not tune task instructions
-against held-out results before the baseline run.
-
-Captured simulator incidents are also **synthetic**. Each reading uses the
-backend's `sensor`, `value`, `unit`, `origin`, and timezone-aware `time`
-fields. A metric is named in `sensor`, for example `n20_fl.rpm`; simulator
-packet defaults and ground-truth fault labels are not presented as measured
-readings or diagnosis evidence. Captured incidents have `source_type=synthetic`,
-synthetic reading origins, and no fault code derived from the injected label.
-Each injected label is stored separately in
-`data/evaluation/captured/<incident_id>.json` (configurable with
-`ROBO_MEDIC_CAPTURED_KEYS_DIR`). Those raw capture keys need an adjudicated cause
-mapping before they can be scored with the synthetic evaluation command.
-
-The diagnosis cause labels are `wheel obstruction`, `motor power/driver path`,
-`encoder/reporting fault`, and `unknown`. Evidence uses `{field, explanation}`;
-`field` must point to an existing top-level incident field, `fault_codes[n]`,
-or a property of `readings[n]`. A diagnosis also requires an alternative, next
-check, and low/medium/high uncertainty. The stable task instructions and
-provider boundary are in `backend/app/provider.py`. Mubit failures return a
-safe error with the request ID when available. Structured server logs retain
-status, response shape, finish reason, and a bounded raw response excerpt for
-synthetic cases; failed calls never create diagnosis records.
-
-### Adapter collection preparation
-
-`python -m backend.app.collect` previews 40 distinct synthetic, label-free
-cases: ten each with obstruction clues, driver clues, reporting clues, and
-ambiguous observations. These are separate from the eight `HOLD-` cases and
-their answer keys. Collection uses the same serializer, model, instructions,
-provider call, and label parser as `POST /api/diagnose`. No Mubit calls occur
-without `--send`; `--limit` bounds a run. A local ignored ledger records each
-attempt before sending, so a timeout or crash cannot silently resend a case.
-The separate ignored answer-key file is never sent to Mubit. The ledger stores
-the input hash, timestamp, HTTP outcome, request reference, raw reply, parsed
-label, latency and save status. Review observations can be appended after
-checking the console. The agreed budget is 25 live calls, including the two
-earlier `DEV-001` calls. Use `--other-attempts` to count additional browser or
-API calls outside this CLI. Example after the live path and console are checked:
-
-```powershell
-python -m backend.app.collect
-python -m backend.app.collect --send --limit 1 --other-attempts 2
-python -m backend.app.collect --review-case COLLECT-001 --task-observed "Classify this robot fault" --reviewer-state queued
-```
-
-Inspect Mubit Request/Reply and the task's kept-example count before sending
-more. Pause collection if the call is grouped into another task, its reply is
-invalid, or review starts rejecting examples. The default first training point is 25 **kept examples**, not 25
-attempts; training must be enabled and a passing adapter is not guaranteed.
-The app's local confirmation records do not submit corrected training targets.
-Ask Mubit for its supported correction-ingestion mechanism before describing
-a technician correction as an adapter update.
-
-## API flow
-
-| Method | Path | Behavior |
-| --- | --- | --- |
-| `GET` | `/api/incidents`, `/api/incidents/{id}` | Validated incident files |
-| `POST` | `/api/diagnose` | Classify by incident ID; save incident snapshot, raw model label, application advisory, model ID, and request reference |
-| `GET` | `/api/diagnoses`, `/api/diagnoses/{id}` | Retrieve saved predictions; list can filter by `incident_id` |
-| `POST` | `/api/confirm` | Save one technician-confirmed outcome per diagnosis without changing the prediction |
-| `GET` | `/api/repairs` | Repair history with cause, fix, inspection note, verification kind, and prediction match; can filter by `incident_id` |
-| `GET` | `/api/evaluation/confirmed` | Accuracy against inspected physical outcomes, grouped by provider and model |
-| `GET` | `/api/metrics` | Local counts, simulator intake, and configured diagnosis provider status |
-
-Example diagnosis request:
-
-```json
-{"incident_id":"DEV-001"}
-```
-
-Use the returned diagnosis `id` to record a synthetic simulation outcome:
-
-```json
-{
-  "diagnosis_id": "<returned diagnosis id>",
-  "incident_id": "DEV-001",
-  "actual_cause": "wheel obstruction",
-  "fix_performed": "Cleared the simulated blockage and checked wheel rotation.",
-  "inspection_note": "Simulator state showed a wheel jam and recovery after clearing it.",
-  "verifier": "simulator operator",
-  "timestamp": "2026-10-24T12:00:00Z"
-}
-```
-
-The confirmation route requires an existing diagnosis with the same incident
-ID, a verifier, an inspection note, and a timezone-aware timestamp. It rejects
-duplicate confirmations for the same diagnosis. Repair history remains available
-even if a later edit removes the incident file, because the original diagnosis
-keeps its incident snapshot. `actual_cause` can name a cause outside the three
-prediction labels when inspection discovers one; an exact-match score then
-counts that prediction as a mismatch. The application does not execute repair
-actions. Confirmations for synthetic incidents are saved as
-`verification_kind=synthetic_simulation`; confirmations for physical incidents
-are saved as `verification_kind=inspection`.
-
-Provider unavailable, timeout, malformed response, and nonexistent evidence
-references return explicit errors. Invalid provider results are not saved.
-
-## Evaluation
-
-`GET /api/evaluation/confirmed` compares predictions with inspected technician
-outcomes from physical incidents. Synthetic simulations remain in repair history
-but are excluded from this report. It groups by provider kind and model ID. Within a group, the most
-recent confirmed diagnosis for each incident contributes one case to accuracy;
-`confirmed_diagnosis_count` also reports all confirmed runs. An empty group has
-no accuracy value. This is diagnostic accuracy against verified causes.
-
-Technician confirmations remain local repair history. They are ground truth for
-the inspected-case evaluation above; saving one does not submit a correction
-or start Mubit training. Task and adapter progress can be viewed in the Mubit
-console; this app does not read those statuses.
-
-Synthetic answer-key evaluation is a separate offline command. It scores the
-first stored diagnosis for each case across providers, before any later saved
-correction can influence a rerun. A case whose first diagnosis belongs to a
-different provider is reported missing for the requested provider.
-Previously saved synthetic diagnoses whose incident snapshots contain fault
-codes are excluded from this score, since older simulator captures and fixtures
-could encode the injected answer there. Run it with:
+To inspect stored results, open `/api/diagnoses`, `/api/repairs`, and
+`/api/evaluation/confirmed`. Synthetic answer-key evaluation is separate:
 
 ```powershell
 python -m backend.app.evaluate --split development --provider-kind local_fixture
 python -m backend.app.evaluate --split held_out --provider-kind local_fixture
 ```
 
-The output includes the key count, evaluated count, missing and excluded case
-IDs, exact matches, and per-case predictions. Missing predictions are not silently counted
-as successes. Keep development and held-out results separate. Neither of these
-accuracy measures is Mubit’s adapter-to-provider agreement test; no adapter
-result is available yet.
+This reports exact matches only for stored first predictions and lists missing
+cases; it does not measure adapter improvement. The fixture result is a
+workflow check, not model performance evidence.
 
-## Checks and current limits
+## Demo and checks
 
-Backend tests use a temporary database and incident directory:
+Follow [the two-minute demo script](docs/DEMO.md). The
+[24 October Mubit support handoff](MUBIT_SUPPORT_HANDOFF_2026-10-24.md)
+documents the prior gateway and console observations. The older
+`PROCESS_DECISIONS.md` is an archived skeleton checklist, not current behavior.
 
 ```powershell
 pip install -r backend/requirements-dev.txt
 python -m unittest discover -s backend/tests -v
+cd frontend
+npm ci
+npm run build
 ```
-
-The frontend supports diagnosis, technician outcome logging, repair history,
-and inspected-case evaluation. The local fixture is for software flow checks;
-its predictions are not evidence of model performance. There is no Mubit
-correction submission or adapter management in this app. The API currently has
-no authentication and is intended for local use. Repair history is stored
-locally in SQLite and is not adapter learning.
