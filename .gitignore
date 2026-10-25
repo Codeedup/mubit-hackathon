@@ -14,3 +14,6 @@ frontend/.vite/
 frontend/.env.local
 
 .playwright-mcp/
+
+# Rendered Robo Medic demo; keep the editable Remotion source in Git.
+/robo-medic-demo.mp4
