@@ -24,8 +24,8 @@ submission does not include a physical-board intake.
 | Implemented | Version 1.0 incidents, simulator capture, diagnosis persistence and provenance, technician outcomes, local evaluation, and the bench/ledger UI. |
 | Demonstrated earlier | A synthetic `SIM-*` jam received `wheel obstruction` through Mubit on 24 October 2026, request `mreq_01a16e6bc1237061858cb325aebe68bc`, model `gemini-3.8-flash`. The reply and outcome were saved in a local SQLite database; that database is not part of a fresh clone. See [the check-in record](CHECKIN_EVIDENCE_2026-10-24.md). |
 | Demonstrable offline | The same API and UI workflow runs with `ROBO_MEDIC_PROVIDER=local_fixture`. This deterministic rule fixture is neither Mubit nor an LLM. |
-| Unavailable | No adapter was produced and no adapter improvement was measured. The team reports that Mubit staff said overloaded servers prevented adaptation during the event; no written staff statement or exact communication time is in this repository. A later task-list screenshot from 24 October shows the intended task reviewing examples at 12 of 25 toward its next step, with no adapter displayed. These are time-specific console views, not a live status feed. |
-| Planned, outside this submission | Adapter comparison if Mubit makes one available. Local confirmations are not sent as training feedback. |
+| Not yet available | No adapter was ready for the event, and no adapter benefit was measured. The 24 October task screenshot shows the intended task still reviewing examples at 12 of 25 toward first training, with no adapter displayed. This is a dated console view, not live status. |
+| Planned, outside this submission | If training completes, we hope to compare adapter diagnoses with the base route on held-out cases and see whether future triage becomes more useful. Local confirmations are not sent as training feedback. |
 
 A saved Mubit `mreq_` ID proves a routed inference response reached the backend.
 It does not prove that the console retained its request/reply text, kept an
@@ -41,10 +41,9 @@ The screenshot was captured on 24 October 2026. At that moment, Mubit showed
 examples** toward its next step, **41 calls in 7 days**, and a dash in
 **By your adapter**. Other tasks appear in the same view, so 41 calls must
 not be treated as 41 kept examples for our one classification task. The image
-documents task progress and the absence of an adapter in that view; it does
-not independently establish the cause of the service problem. The team's
-separate communication with Mubit about server overload explains why it
-could not demonstrate adapter creation. We did not measure adapter gains.
+documents task progress and the absence of an adapter in that view. It does
+not establish why review had not finished. We could not demonstrate adapter
+creation or measure adapter gains within the event window.
 
 ## Run locally
 

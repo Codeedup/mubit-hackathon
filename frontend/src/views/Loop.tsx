@@ -47,11 +47,11 @@ export function Loop({ incidents, diagnoses, repairs, evaluation, metrics, onOpe
           </p>
         </li>
         <li className="flow-mubit">
-          <span className="flow-count flow-count-word">Unavailable</span>
+          <span className="flow-count flow-count-word">Not yet</span>
           <h2>Adapter status</h2>
           <p>
-            No adapter was produced during this event. The team reports Mubit could not turn its examples
-            into an adapter while its servers were overloaded. No before/after model improvement is claimed.
+            No adapter was ready for this event. If training completes, we hope to test whether an adapter
+            makes future triage more useful. No benefit has been measured yet.
           </p>
         </li>
         <li>
@@ -60,9 +60,9 @@ export function Loop({ incidents, diagnoses, repairs, evaluation, metrics, onOpe
           <p>Recorded technician or simulator results; these have not been sent to Mubit as corrections.</p>
         </li>
         <li>
-          <span className="flow-count flow-count-word">Unknown</span>
-          <h2>Mubit kept examples now</h2>
-          <p>The app does not read this count. The last documented console check on 24 October 2026 showed 0 kept for the intended task; that is not a current count.</p>
+          <span className="flow-count flow-count-word">24 Oct</span>
+          <h2>Documented Mubit task view</h2>
+          <p>The 24 October console capture shows the intended task reviewing examples at 12 of 25 toward first training, with no adapter shown. This app does not read live console state.</p>
         </li>
         <li>
           <span className="flow-count">{repairs.length ? `${matched}/${repairs.length}` : '–'}</span>

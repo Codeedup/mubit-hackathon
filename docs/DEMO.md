@@ -14,7 +14,7 @@ the repeatable offline route; announce that choice before any diagnosis.
 | 20–50 s | In the simulator, inject a motor fault, then open the new `SIM-*` case. Point to commanded RPM, reported RPM/current, timestamps, and `synthetic` origins. If capture has not arrived, open a bundled `DEV-*` case. |
 | 50–85 s | Diagnose with the **offline rule fixture**. Say it is deterministic and is not a Mubit or LLM answer. Show the evidence link, uncertainty, next check, raw fixture result, and `local-fixture:` reference. The app never acts on the recommendation. |
 | 85–105 s | Record a simulated outcome after checking the simulator state, then show it in history and the Learning Loop. This stays in local SQLite; it does not train Mubit. |
-| 105–120 s | Explain the earlier Mubit route using the documented `mreq_01a16e6bc1237061858cb325aebe68bc` synthetic request. "The team reports Mubit could not produce an adapter during the event because its servers were overloaded. We cannot show adapter improvement." |
+| 105–120 s | Explain the earlier Mubit route using the documented `mreq_01a16e6bc1237061858cb325aebe68bc` synthetic request. "Mubit recorded our synthetic request, while the task was still reviewing examples at demo time. An adapter wasn't ready yet. We hope to test whether one helps future triage when training completes." |
 
 ## Saved-result route
 
