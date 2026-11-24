@@ -1,5 +1,71 @@
 import { expect, test } from '@playwright/test'
 
+test('direct OpenRouter inference is labelled separately from Mubit and fixtures', async ({
+  page,
+  request,
+}) => {
+  const incident = await (await request.get('/api/incidents/DEV-001')).json()
+  let saved = false
+  const record = {
+    id: 'openrouter-contract-check',
+    incident_id: incident.id,
+    incident,
+    diagnosis: {
+      cause_label: 'wheel obstruction',
+      supporting_evidence: [
+        {
+          field: 'readings[1].value',
+          explanation: 'High current with no wheel motion.',
+        },
+      ],
+      alternative: 'motor power/driver path',
+      next_check: 'Isolate power and inspect the wheel.',
+      uncertainty: 'medium',
+    },
+    created_at: new Date().toISOString(),
+    request_reference: 'gen_mock_contract_check',
+    model_id: 'deepseek/deepseek-v4.1-flash-1017',
+    provider_kind: 'openrouter',
+    raw_response: 'wheel obstruction',
+    model_label: 'wheel obstruction',
+    advisory_source: 'application_rules',
+  }
+  await page.route('**/api/metrics', async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      json: { ...(await response.json()), provider_status: 'openrouter' },
+    })
+  })
+  await page.route('**/api/diagnoses', (route) =>
+    route.fulfill({ json: saved ? [record] : [] }),
+  )
+  await page.route('**/api/diagnose', async (route) => {
+    saved = true
+    await route.fulfill({ status: 201, json: record })
+  })
+  await page.goto('/')
+  await page
+    .getByRole('button', { name: 'Diagnose through OpenRouter', exact: true })
+    .click()
+  await expect(
+    page.getByRole('heading', { name: 'Wheel obstruction', exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.by-line')).toContainText(
+    'through OpenRouter directly',
+  )
+  await expect(page.locator('.provenance')).toContainText('OpenRouter request')
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+  await page
+    .getByRole('button', { name: 'History & evaluation', exact: true })
+    .click()
+  await expect(page.locator('.ledger')).toContainText('OpenRouter')
+  await expect(page.locator('.ledger')).not.toContainText('Fixture')
+})
+
 test('a fresh case can be diagnosed, corrected, reloaded, and exported', async ({
   page,
 }) => {

@@ -222,7 +222,7 @@ export default function App() {
   }
 
   const providerModel = diagnoses.find(
-    (item) => item.provider_kind === 'mubit',
+    (item) => item.provider_kind === metrics?.provider_status,
   )?.model_id
 
   return (
@@ -337,7 +337,9 @@ export default function App() {
                 ? 'Offline demo · deterministic rules'
                 : metrics?.provider_status === 'mubit'
                   ? 'Live classification through Mubit'
-                  : 'Choose a provider in Setup'}
+                  : metrics?.provider_status === 'openrouter'
+                    ? 'Live classification through OpenRouter directly'
+                    : 'Choose a provider in Setup'}
             </span>
             {metrics?.simulator_online && (
               <a href={simulatorUrl} target="_blank" rel="noreferrer">
@@ -474,10 +476,12 @@ function providerText(
   switch (status) {
     case 'mubit':
       return model ? `Mubit · ${model}` : 'Mubit configured'
+    case 'openrouter':
+      return model ? `OpenRouter · ${model}` : 'OpenRouter configured'
     case 'local_fixture':
       return 'Offline demo'
     case 'missing_credentials':
-      return 'Mubit key missing'
+      return 'API key missing'
     case 'not_configured':
       return 'No provider set'
     default:

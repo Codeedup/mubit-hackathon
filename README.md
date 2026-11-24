@@ -6,15 +6,15 @@
 
 A local workspace for robot fault diagnosis. Inspect telemetry, review an
 evidence-linked recommendation, and record the cause and repair a technician
-confirmed. Run the complete demo offline, or route classification through Mubit
-with your own Gemini provider connection.
+confirmed. Run the complete demo offline, use DeepSeek through OpenRouter, or
+route Gemini/DeepSeek classification through Mubit.
 
 ![Robo Medic diagnostics workspace using offline rules](docs/images/workspace.png)
 
 ## Features
 
 - Fresh synthetic cases, live four-motor simulator capture, and immutable JSON import.
-- Offline rule engine or Gemini classification through Mubit, with cited readings,
+- Offline rules, DeepSeek through OpenRouter, or model classification through Mubit, with cited readings,
   alternatives, uncertainty, and a next inspection step.
 - Saved prediction snapshots, attributed outcomes, searchable cases, and exact-run history.
 - Separate synthetic and physical evaluation, plus workspace JSON export.
@@ -70,6 +70,9 @@ Try **Missing evidence** to see an unknown cause with high uncertainty.
 See the [two-minute demo](docs/DEMO.md).
 
 ## Connect Mubit
+
+For DeepSeek, start with the [OpenRouter setup guide](docs/OPENROUTER.md).
+It supports a direct OpenRouter connection and an explicit route through Mubit.
 
 Copy `.env.example` to `.env`. Add a Gemini provider key **in Mubit**, create a
 project inference key, and configure:

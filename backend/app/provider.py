@@ -11,7 +11,10 @@ from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from .schemas import Incident
-from .settings import MUBIT_API_KEY, MUBIT_BASE_URL, MUBIT_MODEL, PROVIDER_MODE
+from .settings import (
+    MUBIT_API_KEY, MUBIT_BASE_URL, MUBIT_MODEL, MUBIT_API_FORMAT, PROVIDER_MODE,
+    OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL,
+)
 
 
 TASK_INSTRUCTIONS = (
@@ -61,7 +64,7 @@ class ProviderResponse:
     raw_response: str
     request_reference: str
     model_id: str
-    provider_kind: Literal["local_fixture", "mubit"]
+    provider_kind: Literal["local_fixture", "mubit", "openrouter"]
 
 
 class DiagnosisProvider(Protocol):
@@ -251,11 +254,71 @@ class LocalFixtureProvider:
         )
 
 
+class OpenAICompatibleProvider:
+    """Bounded label-only classification via OpenRouter, directly or through Mubit."""
+
+    def __init__(self, api_key: str, model: str, base_url: str,
+                 provider_kind: Literal["openrouter", "mubit"] = "openrouter"):
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url.rstrip("/")
+        self.provider_kind = provider_kind
+
+    def diagnose(self, incident: Incident) -> ProviderResponse:
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "system", "content": TASK_INSTRUCTIONS},
+                         {"role": "user", "content": serialize_incident(incident)}],
+            "max_tokens": 128, "stream": False, "reasoning": {"enabled": False},
+        }
+        request = Request(f"{self.base_url}/chat/completions", data=json.dumps(payload).encode(),
+                          headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"})
+        reference = ""
+        try:
+            with urlopen(request, timeout=60) as response:
+                reference = response.headers.get("x-middleware-request-id", "")
+                body = json.load(response)
+        except HTTPError as exc:
+            reference = exc.headers.get("x-middleware-request-id", "") if exc.headers else ""
+            status = exc.code
+            exc.close()
+            name = "OpenRouter" if self.provider_kind == "openrouter" else "Mubit"
+            raise ProviderFailure(f"{name} request failed (HTTP {status})", reference) from exc
+        except (TimeoutError, socket.timeout) as exc:
+            raise ProviderTimeout() from exc
+        except URLError as exc:
+            if isinstance(exc.reason, (TimeoutError, socket.timeout)):
+                raise ProviderTimeout() from exc
+            raise ProviderFailure(f"Could not reach {self.provider_kind}") from exc
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ProviderFailure("The classifier returned invalid JSON", reference) from exc
+        except OSError as exc:
+            raise ProviderFailure("The classifier connection was interrupted", reference) from exc
+        try:
+            content = body["choices"][0]["message"]["content"]
+            model = body.get("model") or self.model
+            if not isinstance(content, str) or not content.strip() or not isinstance(model, str):
+                raise ValueError("Missing label or model")
+            if self.provider_kind == "openrouter":
+                reference = body.get("id", "")
+            if not isinstance(reference, str) or not reference:
+                raise ValueError("Missing request reference")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise ProviderFailure("The classifier returned no usable label or request reference", reference if isinstance(reference, str) else "") from exc
+        return ProviderResponse(content, reference, model, self.provider_kind)
+
+
 def configured_provider() -> DiagnosisProvider:
     if PROVIDER_MODE == "local_fixture":
         return LocalFixtureProvider()
     if PROVIDER_MODE == "mubit":
         if not MUBIT_API_KEY or not MUBIT_MODEL:
             raise ProviderUnavailable("Set MUBIT_API_KEY and MUBIT_MODEL on the backend")
+        if MUBIT_API_FORMAT == "openai":
+            return OpenAICompatibleProvider(MUBIT_API_KEY, MUBIT_MODEL, MUBIT_BASE_URL, "mubit")
         return MubitProvider(MUBIT_API_KEY, MUBIT_MODEL, MUBIT_BASE_URL)
+    if PROVIDER_MODE == "openrouter":
+        if not OPENROUTER_API_KEY or not OPENROUTER_MODEL:
+            raise ProviderUnavailable("Set OPENROUTER_API_KEY and OPENROUTER_MODEL on the backend")
+        return OpenAICompatibleProvider(OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL)
     return UnavailableProvider()

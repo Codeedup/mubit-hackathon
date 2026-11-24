@@ -80,7 +80,7 @@ def evaluate_synthetic(keys_path: Path, split: str, provider_kind: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--split", choices=["development", "held_out"], required=True)
-    parser.add_argument("--provider-kind", choices=["local_fixture", "mubit"], required=True)
+    parser.add_argument("--provider-kind", choices=["local_fixture", "mubit", "openrouter"], required=True)
     parser.add_argument(
         "--keys", type=Path,
         default=ROOT / "data/evaluation/answer_keys.synthetic.json",

@@ -27,6 +27,8 @@ type Props = {
 const UNCERTAINTY = ['low', 'medium', 'high'] as const
 
 export function providerLine(record: DiagnosisRecord): string {
+  if (record.provider_kind === 'openrouter')
+    return `${record.model_id} through OpenRouter directly`
   return record.provider_kind === 'mubit'
     ? `${record.model_id} through Mubit`
     : 'the offline rule fixture (not a model)'
@@ -39,7 +41,10 @@ function rulesBuilt(record: DiagnosisRecord): boolean {
 
 export function DiagnosisSheet(props: Props) {
   const { record, state, provider, onDiagnose } = props
-  const canDiagnose = provider === 'mubit' || provider === 'local_fixture'
+  const canDiagnose =
+    provider === 'mubit' ||
+    provider === 'openrouter' ||
+    provider === 'local_fixture'
   const pending = state.status === 'pending'
 
   return (
@@ -60,11 +65,13 @@ export function DiagnosisSheet(props: Props) {
           <h2 id="diagnosis-heading">No diagnosis yet</h2>
           <p>
             {provider === 'mubit' &&
-              'Gemini classifies this case through Mubit. The app then looks for a reading that supports the label, and marks it unknown if there is none.'}
+              'The configured model classifies this case through Mubit. The app then checks the label against the supplied readings.'}
+            {provider === 'openrouter' &&
+              'The configured model classifies this case through OpenRouter directly. The app checks the label against the readings. This route does not send calls to Mubit.'}
             {provider === 'local_fixture' &&
               'Review this case with the offline rule engine. It uses the supplied readings to suggest a cause and a next check. No model call is made.'}
             {provider === 'missing_credentials' &&
-              'Mubit needs an inference key before diagnosis can run. Open Setup for connection instructions.'}
+              'The selected provider needs an API key before diagnosis can run. Open Setup for connection instructions.'}
             {provider === 'not_configured' &&
               'Choose an offline or Mubit provider in Setup to start diagnosing.'}
             {provider === null && 'Checking the backend…'}
@@ -76,7 +83,9 @@ export function DiagnosisSheet(props: Props) {
           >
             {provider === 'local_fixture'
               ? 'Run offline diagnosis'
-              : 'Diagnose through Mubit'}
+              : provider === 'openrouter'
+                ? 'Diagnose through OpenRouter'
+                : 'Diagnose through Mubit'}
           </button>
         </div>
       )}
@@ -104,8 +113,10 @@ function Pending({
       <div className="pending-pen" aria-hidden="true" />
       <h2 id="diagnosis-heading">
         {provider === 'mubit'
-          ? 'Waiting for Gemini through Mubit'
-          : 'Running the fixture'}
+          ? 'Waiting for the model through Mubit'
+          : provider === 'openrouter'
+            ? 'Waiting for the model through OpenRouter'
+            : 'Running the fixture'}
       </h2>
       <p className="pending-time">{((now - startedAt) / 1000).toFixed(1)} s</p>
       <p>
@@ -151,7 +162,7 @@ function Result({
     <>
       <p className="by-line">
         {rulesBuilt(record)
-          ? `${record.model_id} classified this through Mubit, ${relativeTime(record.created_at)}. The evidence and next check come from the app’s rules.`
+          ? `Classified by ${providerLine(record)}, ${relativeTime(record.created_at)}. The evidence and next check come from the app’s rules.`
           : `Diagnosis from ${providerLine(record)}, ${relativeTime(record.created_at)}`}
       </p>
       <h2
@@ -229,7 +240,11 @@ function Result({
       <dl className="provenance">
         <div>
           <dt>
-            {record.provider_kind === 'mubit' ? 'Mubit request' : 'Fixture run'}
+            {record.provider_kind === 'local_fixture'
+              ? 'Fixture run'
+              : record.provider_kind === 'mubit'
+                ? 'Mubit request'
+                : 'OpenRouter request'}
           </dt>
           <dd>
             <code title={record.request_reference}>
@@ -241,7 +256,9 @@ function Result({
           </dd>
         </div>
         <div>
-          <dt>{record.provider_kind === 'mubit' ? 'Model' : 'Fixture ID'}</dt>
+          <dt>
+            {record.provider_kind !== 'local_fixture' ? 'Model' : 'Fixture ID'}
+          </dt>
           <dd>
             <code>{record.model_id}</code>
           </dd>
@@ -261,7 +278,7 @@ function Result({
       </dl>
       <details className="raw">
         <summary>
-          {record.provider_kind === 'mubit'
+          {record.provider_kind !== 'local_fixture'
             ? 'Raw model reply'
             : 'Raw fixture output'}
         </summary>

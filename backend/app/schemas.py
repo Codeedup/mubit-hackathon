@@ -14,7 +14,7 @@ KnownCause = Literal[
 CauseLabel = Literal[
     "wheel obstruction", "motor power/driver path", "encoder/reporting fault", "unknown"
 ]
-ProviderKind = Literal["local_fixture", "mubit"]
+ProviderKind = Literal["local_fixture", "mubit", "openrouter"]
 VerificationKind = Literal["inspection", "synthetic_simulation"]
 
 
@@ -188,5 +188,5 @@ class Metrics(StrictModel):
     incident_count: int
     diagnosis_count: int
     confirmation_count: int
-    provider_status: Literal["not_configured", "missing_credentials", "local_fixture", "mubit"]
+    provider_status: Literal["not_configured", "missing_credentials", "local_fixture", "mubit", "openrouter"]
     simulator_online: bool = False

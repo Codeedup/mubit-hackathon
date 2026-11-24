@@ -103,7 +103,7 @@ def build_diagnosis(incident: Incident, provider: DiagnosisProvider) -> Diagnosi
     response = provider.diagnose(incident)
     if not response.request_reference or not response.model_id:
         raise ProviderFailure("Provider response lacks a request reference or model ID")
-    if response.provider_kind == "mubit":
+    if response.provider_kind in {"mubit", "openrouter"}:
         try:
             model_label = parse_cause_label(response.raw_response)
         except ValueError as exc:

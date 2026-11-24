@@ -6,6 +6,8 @@ flowchart LR
     B --> C{Provider}
     C --> D[Offline rules]
     C --> E[Gemini through Mubit]
+    C --> O[DeepSeek through OpenRouter]
+    O --> F
     E --> F[Exact fault label]
     F --> G[Application evidence rules]
     D --> H[Immutable diagnosis]
@@ -33,13 +35,19 @@ simulator state and never sends control commands.
 
 ## Diagnosis
 
-The Mubit route sends stable instructions and a label-free case description.
+The Mubit and OpenRouter routes send stable instructions and a label-free case description.
 It accepts exactly `wheel obstruction`, `motor power/driver path`,
 `encoder/reporting fault`, or `unknown`. Application rules then select supporting
 readings, an alternative, next check, and uncertainty. A valid model label with
 no supporting clue becomes `unknown`; the raw label is preserved. Unsupported
 or malformed replies fail visibly. Uncertainty is rule-assigned, not a calibrated
 probability. The offline fixture is explicitly recorded as `local_fixture`.
+
+DeepSeek uses an OpenAI-compatible chat request, either directly through OpenRouter
+(`provider_kind=openrouter`) or through Mubit's compatibility endpoint (`provider_kind=mubit`).
+The direct route saves OpenRouter's generation ID and is excluded from Mubit feedback.
+It disables reasoning and limits output to 128 tokens. Mubit OpenRouter adapter
+serving is not currently available; see [the route guide](OPENROUTER.md).
 
 ## Persistence and replay
 

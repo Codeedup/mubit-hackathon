@@ -36,7 +36,7 @@ export type DiagnosisRecord = {
   created_at: string
   request_reference: string
   model_id: string
-  provider_kind: 'local_fixture' | 'mubit'
+  provider_kind: 'local_fixture' | 'mubit' | 'openrouter'
   raw_response: string
   model_label: Diagnosis['cause_label'] | null
   advisory_source: 'application_rules' | 'local_fixture' | 'legacy_provider'
@@ -88,6 +88,7 @@ export type Metrics = {
     | 'missing_credentials'
     | 'local_fixture'
     | 'mubit'
+    | 'openrouter'
   simulator_online: boolean
 }
 
@@ -96,6 +97,9 @@ export type SetupInfo = {
   provider: string
   model: string
   inference_key_configured: boolean
+  mubit_key_configured: boolean
+  openrouter_key_configured: boolean
+  mubit_api_format: 'gemini' | 'openai'
   management_key_configured: boolean
   project_id: string
   task_id: string

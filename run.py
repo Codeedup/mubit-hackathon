@@ -16,7 +16,7 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--simulator-port", type=int, default=8001)
     parser.add_argument("--no-simulator", action="store_true")
-    parser.add_argument("--provider", choices=["local_fixture", "mubit", "unavailable"])
+    parser.add_argument("--provider", choices=["local_fixture", "mubit", "openrouter", "unavailable"])
     parser.add_argument("--open", action="store_true", help="Open the app in your browser")
     args = parser.parse_args()
     if not (ROOT / "frontend/dist/index.html").exists():

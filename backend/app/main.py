@@ -86,8 +86,12 @@ def health() -> dict:
 
 @app.get("/api/setup")
 def setup() -> dict:
-    return {"version": app.version, "provider": PROVIDER_MODE, "model": MUBIT_MODEL,
-            "inference_key_configured": bool(MUBIT_API_KEY),
+    return {"version": app.version, "provider": PROVIDER_MODE,
+            "model": settings.OPENROUTER_MODEL if PROVIDER_MODE == "openrouter" else MUBIT_MODEL,
+            "inference_key_configured": bool(settings.OPENROUTER_API_KEY if PROVIDER_MODE == "openrouter" else MUBIT_API_KEY),
+            "mubit_key_configured": bool(MUBIT_API_KEY),
+            "openrouter_key_configured": bool(settings.OPENROUTER_API_KEY),
+            "mubit_api_format": settings.MUBIT_API_FORMAT,
             "management_key_configured": bool(settings.MUBIT_MANAGEMENT_KEY),
             "project_id": settings.MUBIT_PROJECT_ID, "task_id": settings.MUBIT_TASK_ID,
             "simulator_url": settings.SIMULATOR_URL,
@@ -126,7 +130,7 @@ def export_workspace() -> JSONResponse:
 
 @app.get("/api/evaluation/synthetic")
 def synthetic_evaluation(split: str = "held_out", provider_kind: str = "local_fixture") -> dict:
-    if split not in {"development", "held_out"} or provider_kind not in {"local_fixture", "mubit"}:
+    if split not in {"development", "held_out"} or provider_kind not in {"local_fixture", "mubit", "openrouter"}:
         raise HTTPException(422, "Choose a supported evaluation split and provider.")
     return evaluate_synthetic(settings.ROOT / "data/evaluation/answer_keys.synthetic.json", split, provider_kind)
 
@@ -288,6 +292,8 @@ def evaluation_confirmed() -> ConfirmedEvaluationReport:
 def metrics() -> Metrics:
     provider_status = PROVIDER_MODE if PROVIDER_MODE != "unavailable" else "not_configured"
     if PROVIDER_MODE == "mubit" and (not MUBIT_API_KEY or not MUBIT_MODEL):
+        provider_status = "missing_credentials"
+    if PROVIDER_MODE == "openrouter" and (not settings.OPENROUTER_API_KEY or not settings.OPENROUTER_MODEL):
         provider_status = "missing_credentials"
     return Metrics(
         incident_count=len(_incident_files_or_500()),

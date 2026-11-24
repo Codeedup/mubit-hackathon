@@ -103,7 +103,7 @@ def _submit_feedback(diagnosis_id: str, call_id: str) -> dict:
     if record is None:
         raise LookupError("Diagnosis not found")
     if record.provider_kind != "mubit":
-        raise ValueError("Offline fixture runs cannot be submitted to Mubit.")
+        raise ValueError("Only saved Mubit-routed calls can be submitted to Mubit.")
     repair = next((item for item in list_repairs(record.incident_id) if item.diagnosis_id == diagnosis_id), None)
     if repair is None:
         raise ValueError("Record an inspected or simulated outcome before submitting feedback.")

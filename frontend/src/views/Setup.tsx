@@ -64,8 +64,8 @@ export function Setup() {
         <Cable className="card-icon" />
         <h2>Connect Mubit</h2>
         <p>
-          In your Mubit project, add a Gemini provider key, then create an
-          inference key. Keep both keys out of browser code.
+          In your Mubit project, add a Gemini or OpenRouter provider key, then
+          create an inference key. Keep both keys out of browser code.
         </p>
         <p>
           <a
@@ -81,7 +81,7 @@ export function Setup() {
             target="_blank"
             rel="noreferrer"
           >
-            Connection guide
+            Gemini guide
           </a>
         </p>
         <p>
@@ -95,8 +95,57 @@ export function Setup() {
         </pre>
         <p className="setup-state">
           Inference key:{' '}
-          {info?.inference_key_configured ? 'configured' : 'not configured'} ·
+          {info?.mubit_key_configured ? 'configured' : 'not configured'} ·
           Model: {info?.model ?? 'checking…'}
+        </p>
+      </section>
+      <section className="sheet setup-card wide">
+        <Cable className="card-icon" />
+        <h2>DeepSeek through OpenRouter</h2>
+        <p>
+          Create an OpenRouter account and a key with a spending limit, then add
+          it to the local root <code>.env</code>. This route calls OpenRouter
+          directly and keeps its saved records separate from Mubit.
+        </p>
+        <p>
+          <a
+            href="https://openrouter.ai/workspaces/default/keys"
+            target="_blank"
+            rel="noreferrer"
+          >
+            OpenRouter API keys
+          </a>
+        </p>
+        <pre className="code-block">
+          {
+            'ROBO_MEDIC_PROVIDER=openrouter\nOPENROUTER_API_KEY=<your OpenRouter key>\nOPENROUTER_MODEL=deepseek/deepseek-v4.1-flash-1017'
+          }
+        </pre>
+        <p>
+          OpenRouter key:{' '}
+          {info?.openrouter_key_configured ? 'configured' : 'not configured'}.
+          Restart after changing configuration.
+        </p>
+        <h3>Keep Mubit in the route</h3>
+        <p>
+          Add your OpenRouter key under Mubit’s OpenAI-compatible provider
+          settings, choose OpenRouter, and use a Mubit inference key in the app:
+        </p>
+        <pre className="code-block">
+          {
+            'ROBO_MEDIC_PROVIDER=mubit\nMUBIT_API_FORMAT=openai\nMUBIT_BASE_URL=https://api.mubit.ai/compat/openrouter/v1\nMUBIT_MODEL=deepseek/deepseek-v4.1-flash-1017\nMUBIT_API_KEY=<your Mubit inference key>'
+          }
+        </pre>
+        <p>
+          Mubit can record these calls and collect examples. Its adapters do not
+          currently answer OpenRouter calls.{' '}
+          <a
+            href="https://docs.mubit.ai/guides/openai-compatible"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Mubit OpenRouter guide
+          </a>
         </p>
       </section>
       <section className="sheet setup-card wide">

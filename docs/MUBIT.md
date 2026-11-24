@@ -14,6 +14,9 @@ calls, management feedback submissions, training, or rollout were performed.
 
 ## Inference
 
+For DeepSeek through OpenRouter, use the [OpenRouter route guide](OPENROUTER.md).
+The instructions below describe the Gemini route.
+
 1. Open your project in [Mubit console](https://app.mubit.ai/console/).
 2. Add a Gemini API key under **Provider keys**, then create a project
    **inference** key under **Mubit keys**.

@@ -22,6 +22,7 @@ def main():
             "ROBO_MEDIC_CAPTURED_KEYS_DIR": str(temporary / "keys"),
             "ROBO_MEDIC_SIMULATOR_URL": "http://127.0.0.1:1",
             "MUBIT_API_KEY": "", "MUBIT_MANAGEMENT_KEY": "", "MUBIT_TASK_ID": "",
+            "OPENROUTER_API_KEY": "",
         })
         from run import main as run_app
         run_app()

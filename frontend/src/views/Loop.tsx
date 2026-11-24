@@ -45,7 +45,12 @@ export function Loop({
     }
   }
   const viaMubit = diagnoses.filter((item) => item.provider_kind === 'mubit')
-  const viaFixture = diagnoses.length - viaMubit.length
+  const viaFixture = diagnoses.filter(
+    (item) => item.provider_kind === 'local_fixture',
+  ).length
+  const viaOpenRouter = diagnoses.filter(
+    (item) => item.provider_kind === 'openrouter',
+  ).length
   const captured = incidents.filter(
     (item) => caseKind(item.id) === 'captured',
   ).length
@@ -93,7 +98,7 @@ export function Loop({
           <p>
             {metrics?.provider_status === 'mubit'
               ? 'Mubit is configured, but this is not a live health check. A saved request ID confirms a routed inference response, not console review.'
-              : `Mubit is not configured for new diagnoses here${viaFixture ? `; ${viaFixture} saved fixture runs are separate` : ''}.`}
+              : `Mubit is not configured for new diagnoses here. ${viaFixture} offline runs and ${viaOpenRouter} direct OpenRouter runs are separate.`}
           </p>
         </li>
         <li className="flow-mubit">
@@ -179,7 +184,9 @@ export function Loop({
                         <code>
                           {record.provider_kind === 'mubit'
                             ? 'Mubit'
-                            : 'Fixture'}{' '}
+                            : record.provider_kind === 'openrouter'
+                              ? 'OpenRouter'
+                              : 'Fixture'}{' '}
                           · {record.model_id}
                         </code>
                       </td>
@@ -251,6 +258,7 @@ export function Loop({
             >
               <option value="local_fixture">Offline rules</option>
               <option value="mubit">Mubit</option>
+              <option value="openrouter">OpenRouter directly</option>
             </select>
           </label>
           <button
@@ -319,7 +327,9 @@ export function Loop({
                   <small>
                     {group.provider === 'mubit'
                       ? 'through Mubit'
-                      : 'offline fixture'}
+                      : group.provider === 'openrouter'
+                        ? 'OpenRouter directly'
+                        : 'offline fixture'}
                   </small>
                 </div>
                 <div className="score-bar" aria-hidden="true">

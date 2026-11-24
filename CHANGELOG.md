@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — DeepSeek / OpenRouter
+
+- Added OpenAI-compatible label classification directly through OpenRouter or through Mubit's OpenRouter route.
+- Defaulted the OpenRouter route to DeepSeek V4.1 Flash 1017, with reasoning disabled and a 128-token response limit.
+- Kept direct OpenRouter records separate from Mubit inference, feedback, and evaluation.
+- Added connection instructions and mocked HTTP contract checks. Live verification is recorded separately after account setup.
+
 ## 1.0.0 — 24 November 2026
 
 - Completed the responsive diagnostics workspace, search/filter, theme choice,
