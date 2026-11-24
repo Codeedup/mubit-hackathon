@@ -18,7 +18,11 @@ export type Incident = {
 }
 export type EvidenceReference = { field: string; explanation: string }
 export type Diagnosis = {
-  cause_label: 'wheel obstruction' | 'motor power/driver path' | 'encoder/reporting fault' | 'unknown'
+  cause_label:
+    | 'wheel obstruction'
+    | 'motor power/driver path'
+    | 'encoder/reporting fault'
+    | 'unknown'
   supporting_evidence: EvidenceReference[]
   alternative: string
   next_check: string
@@ -79,18 +83,86 @@ export type Metrics = {
   incident_count: number
   diagnosis_count: number
   confirmation_count: number
-  provider_status: 'not_configured' | 'missing_credentials' | 'local_fixture' | 'mubit'
+  provider_status:
+    | 'not_configured'
+    | 'missing_credentials'
+    | 'local_fixture'
+    | 'mubit'
   simulator_online: boolean
 }
 
+export type SetupInfo = {
+  version: string
+  provider: string
+  model: string
+  inference_key_configured: boolean
+  management_key_configured: boolean
+  project_id: string
+  task_id: string
+  simulator_url: string
+  frontend_built: boolean
+}
+export type MubitStatus = {
+  status: 'not_configured' | 'connected'
+  checked_at: string
+  message?: string
+  task?: {
+    id: string
+    name: string
+    stage: string
+    rows_count: number
+    active_version: number | null
+    recommendation: string | null
+  }
+  versions?: {
+    id: string
+    version_number: number
+    status: string
+    score: number | null
+  }[]
+}
+export type FeedbackStatus = {
+  configured: boolean
+  submission: {
+    call_id: string
+    rating: string
+    feedback_id: string
+    submitted_at: string
+  } | null
+}
+export type SyntheticEvaluation = {
+  split: string
+  evaluated: number
+  matched: number
+  accuracy: number | null
+  key_count: number
+  missing_incident_ids: string[]
+  excluded_leaky_incident_ids: string[]
+  cases: {
+    incident_id: string
+    predicted_cause: string
+    actual_cause: string
+    matched: boolean
+  }[]
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, init)
+  const response = await fetch(path, {
+    ...init,
+    signal: init?.signal ?? AbortSignal.timeout(75_000),
+  })
   if (!response.ok) {
     let detail = `API returned ${response.status} for ${path}`
     try {
       const body = await response.json()
-      if (body?.detail) detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
-    } catch { /* Keep the HTTP status when no JSON body is returned. */ }
+      if (body?.detail)
+        detail =
+          typeof body.detail === 'string'
+            ? body.detail
+            : JSON.stringify(body.detail)
+    } catch {
+      /* Keep the HTTP status when no JSON body is returned. */
+    }
     throw new Error(detail)
   }
   return response.json() as Promise<T>
@@ -100,14 +172,46 @@ export const api = {
   incidents: () => requestJson<Incident[]>('/api/incidents'),
   diagnoses: () => requestJson<DiagnosisRecord[]>('/api/diagnoses'),
   repairs: () => requestJson<RepairRecord[]>('/api/repairs'),
-  confirmedEvaluation: () => requestJson<ConfirmedEvaluationReport>('/api/evaluation/confirmed'),
+  confirmedEvaluation: () =>
+    requestJson<ConfirmedEvaluationReport>('/api/evaluation/confirmed'),
   metrics: () => requestJson<Metrics>('/api/metrics'),
-  diagnose: (incident_id: string) => requestJson<DiagnosisRecord>('/api/diagnose', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ incident_id }),
-  }),
-  confirm: (payload: ConfirmRequest) => requestJson<ConfirmationRecord>('/api/confirm', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }),
+  diagnose: (incident_id: string) =>
+    requestJson<DiagnosisRecord>('/api/diagnose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ incident_id, request_id: crypto.randomUUID() }),
+    }),
+  confirm: (payload: ConfirmRequest) =>
+    requestJson<ConfirmationRecord>('/api/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  setup: () => requestJson<SetupInfo>('/api/setup'),
+  syntheticEvaluation: (split: string, provider: string) =>
+    requestJson<SyntheticEvaluation>(
+      `/api/evaluation/synthetic?split=${split}&provider_kind=${provider}`,
+    ),
+  mubitStatus: () => requestJson<MubitStatus>('/api/mubit/status'),
+  feedbackStatus: (id: string) =>
+    requestJson<FeedbackStatus>(
+      `/api/diagnoses/${encodeURIComponent(id)}/feedback`,
+    ),
+  submitFeedback: (id: string, call_id: string) =>
+    requestJson<FeedbackStatus['submission']>(
+      `/api/diagnoses/${encodeURIComponent(id)}/feedback`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ call_id }),
+      },
+    ),
+  createDemo: (scenario: string) =>
+    requestJson<Incident>(`/api/demo/${scenario}`, { method: 'POST' }),
+  importIncident: (incident: unknown) =>
+    requestJson<Incident>('/api/incidents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(incident),
+    }),
 }

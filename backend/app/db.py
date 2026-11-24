@@ -59,6 +59,18 @@ def initialize_database() -> None:
                 result_json TEXT NOT NULL,
                 created_at TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS diagnosis_requests (
+                request_id TEXT PRIMARY KEY,
+                incident_id TEXT NOT NULL,
+                diagnosis_id TEXT REFERENCES diagnoses(id)
+            );
+            CREATE TABLE IF NOT EXISTS mubit_feedback (
+                diagnosis_id TEXT PRIMARY KEY REFERENCES diagnoses(id),
+                call_id TEXT NOT NULL UNIQUE,
+                rating TEXT NOT NULL,
+                feedback_id TEXT NOT NULL,
+                submitted_at TEXT NOT NULL
+            );
             """
         )
         # Preserve an existing skeleton database when this contract is introduced.
@@ -192,4 +204,21 @@ def confirmed_evaluation() -> ConfirmedEvaluationReport:
             cases=cases,
         ))
     return ConfirmedEvaluationReport(groups=groups)
+
+
+def claim_request(request_id: str, incident_id: str) -> DiagnosisRecord | None:
+    """One provider attempt per client key, including uncertain/failed attempts."""
+    with connection() as conn:
+        inserted = conn.execute(
+            "INSERT OR IGNORE INTO diagnosis_requests (request_id, incident_id) VALUES (?, ?)",
+            (request_id, incident_id),
+        ).rowcount
+        row = conn.execute("SELECT * FROM diagnosis_requests WHERE request_id = ?", (request_id,)).fetchone()
+    if inserted:
+        return None
+    if row["incident_id"] != incident_id:
+        raise ValueError("This request ID belongs to another incident")
+    if row["diagnosis_id"]:
+        return get_diagnosis(row["diagnosis_id"])
+    raise ValueError("This attempt is pending or failed. Start a new diagnosis to try again.")
 

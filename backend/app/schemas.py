@@ -52,11 +52,11 @@ class Reading(StrictModel):
 
 class Incident(StrictModel):
     schema_version: Literal["1.0"]
-    id: str = Field(min_length=1)
+    id: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
     robot_type: str = Field(min_length=1)
     time_window: str = Field(min_length=1)
     commanded_action: str = Field(min_length=1)
-    readings: list[Reading] = Field(min_length=1)
+    readings: list[Reading] = Field(min_length=1, max_length=2000)
     fault_codes: list[str]
     technician_note: str
     source_type: SourceType
@@ -112,6 +112,11 @@ class Diagnosis(StrictModel):
 
 class DiagnoseRequest(StrictModel):
     incident_id: str = Field(min_length=1)
+    request_id: str | None = Field(default=None, min_length=1, max_length=100)
+
+
+class FeedbackRequest(StrictModel):
+    call_id: str = Field(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9_-]+$")
 
 
 class DiagnosisRecord(StrictModel):

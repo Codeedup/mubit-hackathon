@@ -1,0 +1,123 @@
+# Observed 24 November 2026 at 14:53 UTC through Playwright MCP.
+# Source: https://app.mubit.ai/console/projects/ws-bb11b91c689aa934/workloads/ln_1d669047ad89e9bd95f7d0ce
+# Verbatim accessibility snapshot of task content; navigation and account details omitted.
+    - main [ref=f2e95]:
+      - generic [ref=f2e581]:
+        - generic [ref=f2e583]:
+          - link "Tasks" [ref=f2e584] [cursor=pointer]:
+            - /url: /console/projects/ws-bb11b91c689aa934/workloads
+          - heading "Classify this robot fault" [level=1] [ref=f2e587]
+          - paragraph [ref=f2e588]: "Prompt: Classify this robot fault report using only the…"
+        - paragraph [ref=f2e589]:
+          - generic [ref=f2e590]: Can't train
+        - note [ref=f2e592]: Admin view · this gateway serves university-of-the-arts-london-1792787723691839484. Changes here are written to robofix in the engine; a gateway started with MW_PROJECT=ws-bb11b91c689aa934 serves them.
+        - generic [ref=f2e593]:
+          - paragraph [ref=f2e594]: "No adapter yet: too few examples to train on"
+          - paragraph [ref=f2e595]: "Waiting for more examples: 31 of 43"
+          - paragraph [ref=f2e596]:
+            - generic [ref=f2e597]:
+              - text: "Results on real calls: not measured yet."
+              - button "Why" [ref=f2e598]: i
+        - generic [ref=f2e599]:
+          - generic [ref=f2e600]:
+            - term [ref=f2e601]: Calls
+            - definition [ref=f2e602]: "32"
+          - generic [ref=f2e603]:
+            - term [ref=f2e604]:
+              - text: Examples kept
+              - button "Why" [ref=f2e605]: i
+            - definition [ref=f2e606]: "31"
+          - generic [ref=f2e607]:
+            - term [ref=f2e608]:
+              - text: Answered by your model, all versions · 7 d
+              - button "Why" [ref=f2e609]: i
+            - definition [ref=f2e610]: —
+        - generic [ref=f2e612]:
+          - generic [ref=f2e613]:
+            - heading "Its traffic, last 7 days" [level=2] [ref=f2e614]
+            - generic [ref=f2e615]:
+              - term [ref=f2e616]: Calls
+              - definition [ref=f2e617]: "0"
+              - term [ref=f2e618]: Examples
+              - definition [ref=f2e619]: 31 kept
+            - generic [ref=f2e620]:
+              - paragraph [ref=f2e622]: "7 days: 0 calls"
+              - 'img "Calls per day for Classify this robot fault, last 7 days: 0 in all." [ref=f2e623]'
+              - generic [aria-hidden] [ref=f2e625]:
+                - generic [ref=f2e626]: 6 days ago
+                - generic [ref=f2e627]: Today
+          - generic [ref=f2e628]:
+            - heading "Models asked" [level=2] [ref=f2e629]
+            - list [ref=f2e630]:
+              - listitem [ref=f2e631]:
+                - generic [ref=f2e632]: gemini-3.8-flash
+                - text: 100%
+            - paragraph [ref=f2e633]: Of its last 41 calls.
+          - generic [ref=f2e634]:
+            - heading "Why these calls are one task" [level=2] [ref=f2e635]
+            - list [ref=f2e636]:
+              - listitem [ref=f2e637]:
+                - generic [ref=f2e638]: Rule
+                - generic [ref=f2e639]: "Grouped: same instructions and tools"
+                - generic [ref=f2e640]: Oct 24
+              - listitem [ref=f2e641]:
+                - generic [ref=f2e642]: Rule
+                - generic [ref=f2e643]: Named from its instructions
+        - group [ref=f2e645]:
+          - generic "Details" [ref=f2e646] [cursor=pointer]
+        - generic [ref=f2e650]:
+          - heading [level=2] [ref=f2e651]:
+            - text: History
+            - button "Why" [ref=f2e652]: i
+          - list [ref=f2e654]:
+            - listitem [ref=f2e655]:
+              - generic "Oct 25, 2026, 01:38:48 AM" [ref=f2e656]: Oct 25
+              - generic [ref=f2e657]:
+                - text: Waiting for more examples
+                - button "Why" [ref=f2e658]: i
+            - listitem [ref=f2e659]:
+              - generic "Oct 25, 2026, 01:38:48 AM" [ref=f2e660]: Oct 25
+              - generic [ref=f2e661]:
+                - text: Training
+                - button "Why" [ref=f2e662]: i
+            - listitem [ref=f2e663]:
+              - generic "Oct 25, 2026, 01:38:48 AM" [ref=f2e664]: Oct 25
+              - generic [ref=f2e665]:
+                - text: "Reviewer: 0 new calls, 19 kept, 0 rejected."
+                - group [ref=f2e666]:
+                  - generic "Show each" [ref=f2e667] [cursor=pointer]
+            - listitem [ref=f2e671]:
+              - generic "Oct 24, 2026, 11:26:38 PM" [ref=f2e672]: Oct 24
+              - generic [ref=f2e673]:
+                - text: "Reviewer: 0 new calls, 2 kept, 0 rejected."
+                - group [ref=f2e674]:
+                  - generic "Show each" [ref=f2e675] [cursor=pointer]
+            - listitem [ref=f2e679]:
+              - generic "Oct 24, 2026, 08:15:05 PM" [ref=f2e680]: Oct 24
+              - generic [ref=f2e681]:
+                - text: "Reviewer: 0 new calls, 7 kept, 0 rejected."
+                - group [ref=f2e682]:
+                  - generic "Show each" [ref=f2e683] [cursor=pointer]
+            - listitem [ref=f2e687]:
+              - generic "Oct 24, 2026, 06:41:40 PM" [ref=f2e688]: Oct 24
+              - generic [ref=f2e689]:
+                - text: "Reviewer: 2 new calls, 1 kept, 0 rejected."
+                - group [ref=f2e690]:
+                  - generic "Show each" [ref=f2e691] [cursor=pointer]
+            - listitem [ref=f2e695]:
+              - generic "Oct 24, 2026, 04:47:59 PM" [ref=f2e696]: Oct 24
+              - generic [ref=f2e697]:
+                - text: "Reviewer: 28 new calls, 1 kept, 1 rejected."
+                - group [ref=f2e698]:
+                  - generic "Show each" [ref=f2e699] [cursor=pointer]
+            - listitem [ref=f2e703]:
+              - generic "Oct 24, 2026, 03:13:51 PM" [ref=f2e704]: Oct 24
+              - generic [ref=f2e705]:
+                - text: "Reviewer: 2 new calls, 0 kept, 0 rejected."
+                - group [ref=f2e706]:
+                  - generic "Show each" [ref=f2e707] [cursor=pointer]
+            - listitem [ref=f2e711]:
+              - generic "Oct 24, 2026, 03:13:51 PM" [ref=f2e712]: Oct 24
+              - generic [ref=f2e713]:
+                - text: Found
+                - button "Why" [ref=f2e714]: i

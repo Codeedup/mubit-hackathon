@@ -1,154 +1,122 @@
 # Robo Medic
 
-Robo Medic is a local technician workflow for **synthetic robot faults**. The
-four-motor simulator supplies telemetry. The backend validates an incident,
-asks the configured classifier for one fault label, builds an advisory from
-the readings, and stores the result. A technician can record a simulated
-outcome locally without changing the original prediction.
+**Turn a robot fault into a useful next step.**
 
-```text
-Simulator or bundled synthetic case
-  -> validated data/incidents/*.json
-  -> Mubit one-label inference OR explicit offline rule fixture
-  -> application evidence, uncertainty, and next check
-  -> local outcome and evaluation
-```
+[![Verify Robo Medic](https://github.com/Codeedup/mubit-hackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/Codeedup/mubit-hackathon/actions/workflows/ci.yml)
 
-The diagnosis is advice only. It issues no simulator control command. This
-submission does not include a physical-board intake.
+A local workspace for robot fault diagnosis. Inspect telemetry, review an
+evidence-linked recommendation, and record the cause and repair a technician
+confirmed. Run the complete demo offline, or route classification through Mubit
+with your own Gemini provider connection.
 
-## Submission status
+![Robo Medic diagnostics workspace using offline rules](docs/images/workspace.png)
 
-| Status | What can be shown |
-| --- | --- |
-| Implemented | Version 1.0 incidents, simulator capture, diagnosis persistence and provenance, technician outcomes, local evaluation, and the bench/ledger UI. |
-| Demonstrated earlier | A synthetic `SIM-*` jam received `wheel obstruction` through Mubit on 24 October 2026, request `mreq_01a16e6bc1237061858cb325aebe68bc`, model `gemini-3.8-flash`. The reply and outcome were saved in a local SQLite database; that database is not part of a fresh clone. See [the check-in record](CHECKIN_EVIDENCE_2026-10-24.md). |
-| Demonstrable offline | The same API and UI workflow runs with `ROBO_MEDIC_PROVIDER=local_fixture`. This deterministic rule fixture is neither Mubit nor an LLM. |
-| Not yet available | No adapter was ready for the event, and no adapter benefit was measured. The 24 October task screenshot shows the intended task still reviewing examples at 12 of 25 toward first training, with no adapter displayed. This is a dated console view, not live status. |
-| Planned, outside this submission | If training completes, we hope to compare adapter diagnoses with the base route on held-out cases and see whether future triage becomes more useful. Local confirmations are not sent as training feedback. |
+## Features
 
-A saved Mubit `mreq_` ID proves a routed inference response reached the backend.
-It does not prove that the console retained its request/reply text, kept an
-example, or trained an adapter. `/api/metrics.provider_status=mubit` means the
-provider is **configured**; it is not a health check.
+- Fresh synthetic cases, live four-motor simulator capture, and immutable JSON import.
+- Offline rule engine or Gemini classification through Mubit, with cited readings,
+  alternatives, uncertainty, and a next inspection step.
+- Saved prediction snapshots, attributed outcomes, searchable cases, and exact-run history.
+- Separate synthetic and physical evaluation, plus workspace JSON export.
+- Optional live Mubit task/version status and explicit reviewed correction submission.
+- Responsive desktop/mobile interface, light/dark themes, local fonts, and CI checks.
 
-## Mubit task evidence
+The diagnosis is advisory and sends no robot or simulator control commands. All
+bundled and generated demo cases are labelled **synthetic**. The offline engine
+is a rule fixture, not an LLM or an adapter.
 
-![Mubit task list on 24 October 2026](docs/evidence/mubit-task-status-2026-10-24.png)
+## Quick start
 
-The screenshot was captured on 24 October 2026. At that moment, Mubit showed
-**Classify this robot fault** as **Reviewing examples**, with **12 of 25
-examples** toward its next step, **41 calls in 7 days**, and a dash in
-**By your adapter**. Other tasks appear in the same view, so 41 calls must
-not be treated as 41 kept examples for our one classification task. The image
-documents task progress and the absence of an adapter in that view. It does
-not establish why review had not finished. We could not demonstrate adapter
-creation or measure adapter gains within the event window.
+Requires **Python 3.12+** and **Node.js 22+**. From the repository root:
 
-## Run locally
-
-Requires Python 3.10+ and Node.js 22+. Run commands from the repository root
-unless a step changes directory. The default provider is `unavailable`, so
-choose a mode explicitly in `.env`.
+Windows PowerShell:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r backend/requirements.txt
-Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+npm --prefix frontend ci
+npm --prefix frontend run build
+.\.venv\Scripts\python.exe run.py --open
 ```
 
-For the repeatable offline demo, set `ROBO_MEDIC_PROVIDER=local_fixture` in
-`.env`. Start the API:
+macOS / Linux:
 
-```powershell
-uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.txt
+npm --prefix frontend ci
+npm --prefix frontend run build
+.venv/bin/python run.py --open
 ```
 
-In a second terminal, start the frontend:
+Open **http://127.0.0.1:8000**. The launcher serves the built UI and API together
+and starts the simulator at **http://127.0.0.1:8001**. No `.env` or API key is
+needed for the offline demo. Dependencies and fonts are local after installation.
 
-```powershell
-cd frontend
-npm ci
-npm run dev
+Use `--port 8010 --simulator-port 8011` if the defaults are occupied, or
+`--no-simulator` for stored/generated cases only. The launcher checks ports,
+binds to loopback, and stops its simulator server when you stop the app.
+
+## Try it
+
+1. Select **New demo case → Stopped wheel**.
+2. Inspect zero wheel speed and high motor current, then **Run offline diagnosis**.
+3. Follow the evidence link and review the next check.
+4. Record an accurately described **simulated** outcome with your name.
+5. Open **History & evaluation**, reload, and reopen the exact saved run.
+6. Export the workspace with the download button in the header.
+
+Try **Missing evidence** to see an unknown cause with high uncertainty.
+See the [two-minute demo](docs/DEMO.md).
+
+## Connect Mubit
+
+Copy `.env.example` to `.env`. Add a Gemini provider key **in Mubit**, create a
+project inference key, and configure:
+
+```dotenv
+ROBO_MEDIC_PROVIDER=mubit
+MUBIT_API_KEY=<your Mubit inference key>
+MUBIT_MODEL=gemini-3.8-flash
+MUBIT_BASE_URL=https://api.mubit.ai/gemini
 ```
 
-Open `http://localhost:5173`. Vite proxies `/api` to `127.0.0.1:8000` by
-default. Check `http://localhost:5173/api/metrics` before the demo to ensure
-the browser reaches the intended backend and incident directory. If port 8000
-is already used, set `ROBO_MEDIC_API_PROXY_TARGET=http://127.0.0.1:<port>` in
-ignored `frontend/.env.local` and start the API on the same port. Use one
-backend process and one SQLite path. `ROBO_MEDIC_DB_PATH` and
-`ROBO_MEDIC_INCIDENT_DIR` can be set in `.env`; relative paths resolve from the
-repository root.
+Restart the app. **Diagnose through Mubit** makes one inference request per
+deliberate click. Errors stay visible; there is no silent provider switch or
+automatic retry of uncertain requests. Keys stay server-side.
 
-The bundled `DEV-*` and `HOLD-*` incidents are synthetic and work with the
-simulator off. For a new synthetic capture, start the optional simulator in a
-third terminal:
+Optional `MUBIT_MANAGEMENT_KEY`, `MUBIT_PROJECT_ID`, and `MUBIT_TASK_ID` enable
+task status and reviewed corrections. See [Mubit setup](docs/MUBIT.md).
 
-```powershell
-python -m simulator.server --host 127.0.0.1 --port 8001
-```
+**Observed on 24 November 2026:** the original task had 31 kept examples and
+was waiting for 43, with no adapter ready. The Connect page reported no provider
+key. This release was tested offline; live inference, management feedback, and
+adapter performance were not verified against that account. The
+[dated console record](docs/evidence/mubit-task-status-2026-11-24.txt) records that state.
 
-Open `http://localhost:8001`, inject a fault, and watch for a `SIM-*` case in
-the bench queue. The simulator uses four virtual motors; its readings are
-labelled `synthetic`. Injected fault labels are stored separately from the
-incident input. The simulator is optional for inspecting stored cases.
+## Data and API
 
-### Provider modes
+Incidents are in `data/incidents/`; SQLite defaults to `backend/robo_medic.sqlite3`.
+Paths can be overridden in `.env`. Existing case IDs cannot be overwritten;
+use a new ID for a revision. Export is an evidence record, not a database restore
+format. Back up the stopped database and incident directory for full recovery.
 
-| `.env` value | Behavior |
+The API reference is at **http://127.0.0.1:8000/docs**, with health at
+`/api/health`. `/api/setup` never includes credentials. Use one backend process
+and database per workspace. This is a single-operator local app without authentication.
+
+## Project guide
+
+| Path | Purpose |
 | --- | --- |
-| `ROBO_MEDIC_PROVIDER=local_fixture` | Explicit offline rule fixture. Records use `provider_kind=local_fixture`, a `local-fixture:` reference, and a fixture model ID. |
-| `ROBO_MEDIC_PROVIDER=mubit` | Live Mubit inference using server-side `MUBIT_API_KEY`, `MUBIT_MODEL`, and `MUBIT_BASE_URL`. Only use after a separate live rehearsal; gateway availability is not established by this submission. |
-| `ROBO_MEDIC_PROVIDER=unavailable` | Diagnosis returns 503; stored incidents, diagnoses, and outcomes remain readable. |
+| `backend/` | FastAPI, provider integration, evidence rules, SQLite, evaluation, focused tests |
+| `frontend/` | React/TypeScript app and desktop/mobile Playwright checks |
+| `simulator/` | Virtual N20 motors, servo, telemetry, and fault injection |
+| `data/` | Synthetic cases and separate answer keys |
+| `docs/` | [Architecture](docs/ARCHITECTURE.md), [development](docs/DEVELOPMENT.md), evidence, and archives |
+| `robo-medic-video/` | Editable historical hackathon video; separate from app startup |
 
-The Mubit provider in [provider.py](backend/app/provider.py) sends fixed
-instructions and a label-free incident description, then accepts exactly one
-of `wheel obstruction`, `motor power/driver path`, `encoder/reporting fault`,
-or `unknown`. Application rules select evidence and a next check; an
-unsupported model label is downgraded to `unknown` while its raw reply remains
-stored. Timeouts and provider errors appear on screen and do not silently
-switch to the fixture. Keep `.env`, keys, local SQLite, and logs out of Git.
-
-## Data and evaluation
-
-Every incident has an ID, source label, time window, action, note, fault codes,
-and readings with sensor, value, unit, origin, and timezone-aware timestamp.
-The loader rejects malformed files and duplicate IDs. Diagnoses store an
-immutable incident snapshot, provider kind, model ID, raw reply, request ID,
-and advisory. `POST /api/confirm` stores one outcome per diagnosis without
-editing that prediction. The API is local-only and has no authentication.
-
-The browser's Learning Loop counts **saved local** Mubit diagnoses and
-outcomes. It cannot query Mubit's kept-example count. The checked-in
-`backend.app.collect` tool and its attempt-before-send ledger remain available
-as historical work, but the prepared 40 cases are not part of this demo and
-must not be sent while adaptation is unavailable.
-
-To inspect stored results, open `/api/diagnoses`, `/api/repairs`, and
-`/api/evaluation/confirmed`. Synthetic answer-key evaluation is separate:
-
-```powershell
-python -m backend.app.evaluate --split development --provider-kind local_fixture
-python -m backend.app.evaluate --split held_out --provider-kind local_fixture
-```
-
-This reports exact matches only for stored first predictions and lists missing
-cases; it does not measure adapter improvement. The fixture result is a
-workflow check, not model performance evidence.
-
-## Demo and checks
-
-Follow [the two-minute demo script](docs/DEMO.md). The
-[24 October Mubit support handoff](MUBIT_SUPPORT_HANDOFF_2026-10-24.md)
-documents the prior gateway and console observations. The older
-`PROCESS_DECISIONS.md` is an archived skeleton checklist, not current behavior.
-
-```powershell
-pip install -r backend/requirements-dev.txt
-python -m unittest discover -s backend/tests -v
-cd frontend
-npm ci
-npm run build
-```
+Originally built by a three-person team for the 42-hour Mubit Night Shift
+Hackathon. [October records](docs/archive/) preserve the event's observations.
+No physical-board intake or measured adapter improvement is included.
+See [release notes](CHANGELOG.md) and [contributing](CONTRIBUTING.md).

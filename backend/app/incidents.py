@@ -1,6 +1,8 @@
-"""Load team-authored, versioned incident JSON. No records are bundled."""
+"""Load and atomically import immutable versioned incidents."""
 
 import json
+import os
+import tempfile
 
 from pydantic import ValidationError
 
@@ -30,4 +32,20 @@ def list_incidents() -> list[Incident]:
 
 def get_incident(incident_id: str) -> Incident | None:
     return next((item for item in list_incidents() if item.id == incident_id), None)
+
+
+def save_incident(incident: Incident) -> None:
+    """A complete file becomes visible at once; never replace an existing case."""
+    if get_incident(incident.id) is not None:
+        raise FileExistsError(incident.id)
+    INCIDENT_DIR.mkdir(parents=True, exist_ok=True)
+    target = INCIDENT_DIR / f"{incident.id}.json"
+    descriptor, temporary = tempfile.mkstemp(prefix=".import-", dir=INCIDENT_DIR)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            output.write(incident.model_dump_json(indent=2) + "\n")
+        # Hard-link creation is atomic and fails if the destination exists.
+        os.link(temporary, target)
+    finally:
+        os.unlink(temporary)
 

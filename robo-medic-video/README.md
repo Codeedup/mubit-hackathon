@@ -1,4 +1,8 @@
-# Robo Medic Demo Video (Remotion)
+# Archived hackathon demo video (Remotion)
+
+This video records the October 2026 prototype. It is historical material and
+does not depict the current 1.0 interface, current Mubit task state, or newly
+implemented management feedback. See the root README for the current app.
 
 This is a standalone Remotion project with a rendered 120-second, 1920×1080, 30 fps demo at [`out/robo-medic-demo.mp4`](out/robo-medic-demo.mp4). It follows `VIDEO_BRIEF.md` and keeps the app, hardware, and Mubit evidence slots replaceable.
 
@@ -9,18 +13,19 @@ The Mubit dashboard capture at 14:33 shows four requests and zero adapters servi
 ## Start Remotion Studio
 
 ```bash
+npm ci
 npm run dev
 ```
 
-## Use with Codex
+## Source and verification
 
-The Remotion Agent Skills are installed under `.agents/skills/`, including `remotion-create`, `remotion-studio`, and `remotion-render`. From Codex, open this folder as the project and start with:
+The editable composition is in `src/RoboMedicDemo.tsx`. `npm run build` verifies
+the Remotion bundle. Generated bundles are ignored. Vendored agent-skill caches
+are not part of this repository; install the tools you use separately.
 
-```text
-/remotion-create
-```
-
-Then ask Codex to follow [`VIDEO_BRIEF.md`](VIDEO_BRIEF.md), inspect `public/assets/`, and make the two-minute Robo Medic demo. The brief includes the narration, scene timing, asset guidance, and factual guardrails for the Mubit adapter status.
+[`VIDEO_BRIEF.md`](VIDEO_BRIEF.md) preserves the original event brief. If you
+revise the video, replace its app captures and narration and verify every
+current integration claim against the actual service state.
 
 ## Add footage
 

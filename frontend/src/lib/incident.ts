@@ -102,9 +102,10 @@ export function relativeTime(iso: string, now = Date.now()): string {
   return new Date(iso).toLocaleDateString()
 }
 
-export type CaseKind = 'captured' | 'development' | 'held_out' | 'other'
+export type CaseKind = 'demo' | 'captured' | 'development' | 'held_out' | 'other'
 
 export function caseKind(id: string): CaseKind {
+  if (id.startsWith('DEMO-')) return 'demo'
   if (id.startsWith('SIM-')) return 'captured'
   if (id.startsWith('DEV-')) return 'development'
   if (id.startsWith('HOLD-')) return 'held_out'
@@ -112,6 +113,7 @@ export function caseKind(id: string): CaseKind {
 }
 
 export const CASE_KIND_LABEL: Record<CaseKind, string> = {
+  demo: 'Your demo cases',
   captured: 'Captured from the simulator',
   development: 'Development cases',
   held_out: 'Held-out cases',

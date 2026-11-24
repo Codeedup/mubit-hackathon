@@ -1,42 +1,26 @@
-# Robo Medic: two-minute software demo
+# Two-minute demo
 
-This script uses the current synthetic simulator and local diagnosis workflow.
-It requires one backend at the address used by Vite's `/api` proxy. Check
-`http://localhost:5173/api/metrics` before starting. Follow the startup steps
-in the [README](../README.md). Select `ROBO_MEDIC_PROVIDER=local_fixture` for
-the repeatable offline route; announce that choice before any diagnosis.
+Start `python run.py --provider local_fixture --open` after installing backend
+dependencies and building the frontend. Confirm the **Offline demo** badge.
 
-## Live route
-
-| Time | Show and say |
+| Time | Show |
 | --- | --- |
-| 0–20 s | Open the bench. "Repeated robot faults cost technician time. These cases are synthetic, from a four-motor simulator or bundled examples." Point to the source label. |
-| 20–50 s | In the simulator, inject a motor fault, then open the new `SIM-*` case. Point to commanded RPM, reported RPM/current, timestamps, and `synthetic` origins. If capture has not arrived, open a bundled `DEV-*` case. |
-| 50–85 s | Diagnose with the **offline rule fixture**. Say it is deterministic and is not a Mubit or LLM answer. Show the evidence link, uncertainty, next check, raw fixture result, and `local-fixture:` reference. The app never acts on the recommendation. |
-| 85–105 s | Record a simulated outcome after checking the simulator state, then show it in history and the Learning Loop. This stays in local SQLite; it does not train Mubit. |
-| 105–120 s | Explain the earlier Mubit route using the documented `mreq_01a16e6bc1237061858cb325aebe68bc` synthetic request. "Mubit recorded our synthetic request, while the task was still reviewing examples at demo time. An adapter wasn't ready yet. We hope to test whether one helps future triage when training completes." |
+| 0–20 s | Create a **Stopped wheel** demo case. Explain that its readings are synthetic. |
+| 20–45 s | Inspect zero wheel speed and 1.8 A current. Select **Run offline diagnosis**. Show the cause, medium uncertainty, and cited reading. |
+| 45–70 s | Follow the evidence link and read the next check. A technician decides what to inspect; the diagnosis does not control the robot. |
+| 70–95 s | Record the accurately described simulated cause, check, fix, and your name. Show the saved outcome. |
+| 95–110 s | Open **History & evaluation**, reload, and reopen the exact run from its ledger. Export the workspace. |
+| 110–120 s | Explain the optional Mubit classification, reviewed feedback, and task status. No adapter improvement has been measured. |
 
-## Saved-result route
+For an ambiguous example, create **Missing evidence**. Expect **Cause unknown**,
+high uncertainty, and a request for another measurement.
 
-If the **original local SQLite database** containing the 24 October Mubit run
-is available, start the backend with `ROBO_MEDIC_DB_PATH` pointing to it and
-the matching incident directory. Verify `/api/diagnoses` contains the exact
-request ID above before the demo. Open that saved diagnosis in the browser and
-show its raw label, model, evidence, and local outcome. No fresh Mubit call is
-needed. The database is ignored by Git, so a fresh clone cannot show this
-record unless the team supplies its own saved data.
+For simulator capture, open its dashboard and inject an N20 motor jam. A new
+`SIM-*` case appears after fresh fault packets arrive. The injected label stays
+in a separate answer key. Clear/reset the fault from the simulator dashboard
+after observing it: a prolonged simulated stall can burn out the virtual motor.
 
-If the database is absent, use the live offline route and show the
-[dated check-in record](../CHECKIN_EVIDENCE_2026-10-24.md) as **historical
-evidence**, rather than presenting a fixture result as a saved Mubit result.
-Do not quote a current Mubit kept count: the app has no console connection.
-
-## Rehearsal checklist
-
-1. Confirm exactly one backend, one proxy target, and the expected
-   `provider_status` in `/api/metrics`. That field describes configuration.
-2. Confirm simulator capture or the chosen bundled incident is visible.
-3. Run one fixture diagnosis and record a simulated outcome. Reload the page
-   to confirm both persist in the selected SQLite database.
-4. Practice the saved-result or historical-evidence fallback and state clearly
-   which path the audience saw.
+For a live Mubit demo, rehearse one synthetic case first. Show the raw reply,
+model ID, and request reference. Successful inference does not establish that a
+call was kept for training. If the provider is unavailable, restart explicitly
+in offline mode and identify that route to the audience.

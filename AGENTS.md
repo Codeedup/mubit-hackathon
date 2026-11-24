@@ -20,7 +20,7 @@
 - Avoid new test dependencies for low-risk changes. Prefer a targeted manual
   check when a one-off behavior does not justify permanent test code.
 - During development, run tests for the affected package or component first.
-- Do not automatically run the complete ROS 2 test suite after every edit.
+- Run backend checks for API/provider changes and Playwright checks for user workflow changes.
 - Run broader regression tests when changes cross package boundaries, affect shared interfaces, or introduce integration risks.
 - Run all mandatory offline and safety validation gates before hardware testing or relevant integration milestones.
 - Never skip safety-critical tests solely to save tokens.
@@ -30,5 +30,14 @@
 
 - Keep changes within the requested task and affected dependencies.
 - Do not refactor unrelated packages without justification.
-- Preserve mission_manager safety rules, watchdogs, abort behavior, and approved-output gating.
-- Never send live flight commands without explicit operator authorization.
+- Preserve immutable diagnosis snapshots, explicit source labels, and separate answer keys.
+- Keep diagnoses advisory. Never add physical control commands or automatic training to this workflow.
+- Do not make paid inference calls unless the user has authorized them and set a budget.
+
+## Local workflow
+
+- Read README.md and docs/ARCHITECTURE.md for the current product, not docs/archive/.
+- Build with npm --prefix frontend run build; start with python run.py.
+- Run python -m unittest discover -s backend/tests -v in the virtual environment.
+- Browser checks: cd frontend and npm run test:e2e. They own a temporary workspace.
+- Keep keys, SQLite files, runtime cases, node_modules, and generated builds out of Git.
